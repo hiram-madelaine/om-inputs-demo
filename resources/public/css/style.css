@@ -1,7 +1,18 @@
 /* some style */
 
 
-.demo {
-    width: 400px
 
+#schema-types {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.demo {
+    width: 400px;
+    padding: 1px;
+}
+
+button.disabled {
+
+    display: none;
 }
