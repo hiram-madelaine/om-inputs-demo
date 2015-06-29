@@ -9,7 +9,7 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [sablono "0.3.4"]
                  [org.omcljs/om "0.8.8"]
-                 [om-inputs "0.3.8"]
+                 [om-inputs "0.3.9-SNAPSHOT"]
                  ]
 
   :plugins [[lein-cljsbuild "1.0.5"]
