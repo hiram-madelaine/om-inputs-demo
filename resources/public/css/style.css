@@ -12,7 +12,14 @@
     padding: 1px;
 }
 
+
+.demo-body {
+    background-color: #EEE;
+}
+
 button.disabled {
 
     display: none;
 }
+
+

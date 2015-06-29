@@ -80,11 +80,6 @@ body {
   color : #e47a4b;
 }
 
-#fidelite-client button {
-
-    border-color: #e47a4b;
-    background-color: #e47a4b;
-}
 
 button.disabled {
     display:none;
@@ -94,5 +89,22 @@ button.disabled {
 
     display: flex;
 
+}
+
+.stepper {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+}
+.stepper > .btn:last-child:not(:first-child) {
+  border-top-right-radius: 200px;
+  border-bottom-right-radius: 200px;
+}
+.stepper > .btn:first-child:not(:last-child) {
+  border-top-left-radius: 200px;
+  border-bottom-left-radius: 200px;
+}
+.input-stepper {
+  padding: 7px 3px 7px 7px;
 }
 
