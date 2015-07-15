@@ -12,30 +12,29 @@
 
 ;; define your app data so that it doesn't get over-written on reload
 
-(defonce app-state (atom {:text "Hello world!"}))
+(defonce app-state (atom {}))
 
 
 (defn demo-comp
   "Diplay a the information of a demo"
   [app owner {:keys [title desc k comp src] :as opts}]
   (om/component
-    (dom/div #js {:className "demo"}
-             (dom/div #js {:className "panel panel-primary"}
-                      (dom/div #js {:className "panel-heading"}
-                               (dom/h1 #js {:className "panel-title"} title))
-                      (dom/div #js {:className "demo-body panel-body"}
-                               (when desc (dom/pre #js {}
-                                         (html desc)))
-                               (dom/h4 #js {} "Source : ")
-                               (dom/pre #js {}
-                                        (dom/code #js {:className "clojure"}
-                                                  src))
-                               (dom/h4 #js {} "Display : ")
-                               (om/build comp app {:state (om/get-state owner)})
-                               (dom/h4 #js {} "Result : ")
-                               (dom/pre #js {}
-                                        (dom/code #js {:className "clojure"}
-                                                  (print-str (get app k)))))))))
+    (dom/div #js {:className "demo panel panel-primary"}
+             (dom/div #js {:className "panel-heading"}
+                      (dom/h1 #js {:className "panel-title"} title))
+             (dom/div #js {:className "demo-body panel-body"}
+                      (when desc (dom/pre #js {}
+                                          (html desc)))
+                      (dom/h4 #js {} "Source : ")
+                      (dom/pre #js {}
+                               (dom/code #js {:className "clojure"}
+                                         src))
+                      (dom/h4 #js {} "Display : ")
+                      (om/build comp app {:state (om/get-state owner)})
+                      (dom/h4 #js {} "Result : ")
+                      (dom/pre #js {}
+                               (dom/code #js {:className "clojure"}
+                                         (print-str (get app k))))))))
 
 (def demo-string
   (make-input-comp
@@ -66,6 +65,14 @@
     {:Inst s/Inst}
     (fn [app owner result]
       (om/update! app :demo-inst result))))
+
+(def demo-date
+  (make-input-comp
+    :demo-date
+    {:date s/Inst}
+    (fn [app owner result]
+      (om/update! app :demo-date result))
+    {:date {:type "date"}}))
 
 (def demo-enum
   (make-input-comp
@@ -194,6 +201,12 @@
                                                          :k     :demo-inst
                                                          :title "A single Inst field"
                                                          :desc  "With the google Closure Calendar the rendering is the same across browsers"}
+                                            :init-state state})
+                   (om/build demo-comp app {:opts       {:comp  demo-date
+                                                         :src   (with-out-str (cljs.repl/source demo-date))
+                                                         :k     :demo-date
+                                                         :title "A single Inst field handled with native date input"
+                                                         :desc  "If you want to use the native chrome date input add the option :type=\"date\""}
                                             :init-state state})
                    (om/build demo-comp app {:opts       {:comp  demo-regex
                                                          :src   (with-out-str (cljs.repl/source demo-regex))
