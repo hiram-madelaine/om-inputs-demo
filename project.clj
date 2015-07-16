@@ -31,7 +31,7 @@
                          :output-dir "resources/public/js/compiled/out"
                          :source-map-timestamp true }}
              {:id "min"
-              :source-paths ["src"]
+              :source-paths ["src/cljs"]
               :compiler {:output-to "resources/public/js/compiled/om_inputs_demo.js"
                          :main om-inputs-demo.core                         
                          :optimizations :advanced
