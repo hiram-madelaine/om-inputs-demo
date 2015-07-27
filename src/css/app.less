@@ -1,0 +1,267 @@
+@color-base        : #3bafdA;
+
+@color-primary   : mix(@color-base, mediumvioletred);
+@color-secondary : mix(@color-base, lightseagreen);
+@color-tertiary  : mix(@color-base, mintcream);
+
+@triadic-secondary : spin(@color-base, -(360 / 3));
+@triadic-tertiary  : spin(@color-base, (360 / 3));
+
+.schema-types {
+    display: flex;
+    flex-wrap: wrap;
+    background-color: #EEE;
+    border-radius: 6px;
+    padding: 6px;
+}
+
+.panel-demo(@color) {
+    @bck-color: lighten(@color,35%);
+    border-color: desaturate(@color,20%);
+    background-color: @bck-color;
+
+   .panel-title, .panel-heading {
+           background-color: @color;
+           color: contrast(@color);
+       }
+
+    > .panel-body {
+        background-color: @bck-color;
+        border-radius: 4px;
+        background: linear-gradient(90deg,
+                    @bck-color,
+                    rgba(255, 255, 255, 0.6) 2%,
+                    @bck-color 4%,
+                    @bck-color,
+                    @bck-color 96%,
+                    rgba(255, 255, 255, 0.6) 99%,
+                    @bck-color) ;
+    }
+
+    .panel-heading {
+       position: relative;
+       z-index: 0;
+      label {
+        position: relative;
+        z-index: 2;
+      }
+         &::before {
+            content: "";
+            width: 45px;
+            height: 18px;
+            top: 1px;
+            left: 2px;
+            border-radius: 4px;
+            background: radial-gradient(circle at 38px 38px, @color 70%, rgba(255, 255, 255, 0.6) 88%);
+            position: absolute;
+            z-index: 1;
+            }
+        &::after {
+            content: "";
+            width: 30px;
+            height: 10px;
+            top: 1px;
+            right: 1px;
+            border-radius: 4px;
+            background: radial-gradient(circle at 4px 29px, @color 68%, rgba(255, 255, 255, 0.6) 88%);
+            position: absolute;
+            z-index: 1;
+            }
+    }
+
+
+
+}
+
+
+
+.string {
+    .panel-demo(@color-base);
+}
+
+.numeric {
+    .panel-demo(@triadic-secondary)
+}
+
+.inst {
+    .panel-demo(@triadic-tertiary)
+
+}
+
+.enum {
+    .panel-demo(@color-secondary);
+}
+
+.bool {
+    .panel-demo(@color-primary);
+}
+
+
+.demo {
+    width: 400px;
+    margin: 4px;
+    box-shadow: 2px 3px 7px 0px #999;
+
+}
+
+
+button.disabled {
+
+    display: none;
+}
+
+
+.demo-footer {
+        position: relative;
+        &::after {
+                    content: "";
+                    width: 40px;
+                    height: 15px;
+                    bottom: 7px;
+                    right: 7px;
+                    border-radius: 4px;
+                    background: radial-gradient(circle at 6px -17px, rgba(225, 225, 225, 0.1) 60%, #ffffff);
+                    position: absolute;
+                    z-index: 1;
+        }
+    }
+
+
+
+.add-top-reflect(@color) {
+        position: relative;
+       z-index: 0;
+      label {
+        position: relative;
+        z-index: 2;
+      }
+         &::before {
+            content: "";
+            width: 45px;
+            height: 28px;
+            top: 1px;
+            left: 2px;
+            border-top-left-radius: 4px;
+            background: radial-gradient(circle at 38px 38px, @color 70%, rgba(255, 255, 255, 0.6) 88%);
+            position: absolute;
+            z-index: 1;
+            }
+        &::after {
+            content: "";
+            width: 30px;
+            height: 10px;
+            top: 1px;
+            right: 1px;
+            border-radius: 4px;
+            background: radial-gradient(circle at 4px 29px, @color 68%, rgba(255, 255, 255, 0.6) 88%);
+            position: absolute;
+            z-index: 1;
+            }
+}
+.add-bottom-reflect(@color){
+        position: relative;
+         &::before {
+               content: "";
+                   width: 40px;
+                   height: 16px;
+                   bottom: 1px;
+                   left: 1px;
+                   border-bottom-left-radius: 6px;
+                   background: radial-gradient(circle at 5px 23px, rgba(255, 255, 255, 0.9),@color 55%);
+                   position: absolute;
+                   z-index: 1;
+                }
+        &::after {
+                    content: "";
+                    width: 40px;
+                    height: 15px;
+                    bottom: 2px;
+                    right: 1px;
+                    border-bottom-right-radius: 3px;
+                    background: radial-gradient(circle at 6px -17px, @color 60%,rgba(255, 255, 255, 0.6));
+                    position: absolute;
+                    z-index: 1;
+        }
+
+}
+
+
+.add-body-reflect(@color){
+     background: linear-gradient(90deg,
+                    darken(@color,10%),
+                    rgba(255, 255, 255, 0.3) 1%,
+                    @color 2%,
+                    @color,
+                    @color 98%,
+                    rgba(255, 255, 255, 0.3) 99%,
+                    darken(@color,10%)) ;
+}
+
+.card(@color) {
+    @bck-color: lighten(@color,35%);
+    @border-color: desaturate(@color,20%);
+    margin: 7px;
+    border-radius: 6px;
+    border: 1px solid @border-color;
+    width: 400px;
+    box-shadow: 2px 3px 7px 0px #999;
+
+    display: flex;
+
+    flex-direction: column;
+    justify-content: space-between;
+
+
+    .card-header {
+        border-top-left-radius: 6px;
+        border-top-right-radius: 6px;
+        background-color: @color;
+        padding: 10px 5px 5px 15px;
+        .add-top-reflect(@color);
+        color: contrast(@color);
+    }
+
+
+    .card-body {
+        height: 100%;
+        padding:10px;
+       .add-body-reflect(@bck-color);
+    }
+
+    .card-footer {
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 6px;
+        background-color: @color;
+        padding: 0px;
+        height: 1.3em;
+        .add-bottom-reflect(@color);
+    }
+}
+
+
+.card-string {
+    .card(@color-base);
+}
+
+
+
+.card-numeric {
+    .card(@triadic-secondary)
+}
+
+.card-inst {
+    .card(@triadic-tertiary)
+
+}
+
+.card-enum {
+    .card(@color-secondary);
+}
+
+.card-bool {
+    .card(@color-primary);
+}
+
+.card- {
+    .card(lightgrey);
+}
