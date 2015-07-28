@@ -1,11 +1,34 @@
-@color-base        : #3bafdA;
+/* MIXINS */
 
-@color-primary   : mix(@color-base, mediumvioletred);
-@color-secondary : mix(@color-base, lightseagreen);
-@color-tertiary  : mix(@color-base, mintcream);
+/* As hex codes */
 
-@triadic-secondary : spin(@color-base, -(360 / 3));
-@triadic-tertiary  : spin(@color-base, (360 / 3));
+/* MIXINS */
+
+/* As hex codes */
+
+@color-primary-0: #617E95;	/* Main Primary color */
+@color-primary-1: #A2B2BE;
+@color-primary-2: #7D94A5;
+@color-primary-3: #476A85;
+@color-primary-4: #2D5573;
+
+@color-secondary-1-0: #965F96;	/* Main Secondary color (1) */
+@color-secondary-1-1: #BFA1BF;
+@color-secondary-1-2: #A67CA6;
+@color-secondary-1-3: #864386;
+@color-secondary-1-4: #742974;
+
+@color-secondary-2-0: #D1DF8D;	/* Main Secondary color (2) */
+@color-secondary-2-1: #F2F9D2;
+@color-secondary-2-2: #EBF6B7;
+@color-secondary-2-3: #B6C764;
+@color-secondary-2-4: rgb(56,	185,	145	); //#99AC3D;
+
+@color-complement-0: #E7C392;	/* Main Complement color */
+@color-complement-1: #FFEED7;
+@color-complement-2: #FFE3BE;
+@color-complement-3: darken(#F2BE22,10%);//darken(rgb(231,	166,	54	),5%);//#CEA268;
+@color-complement-4: #B2813F;
 
 .schema-types {
     display: flex;
@@ -69,31 +92,6 @@
             }
     }
 
-
-
-}
-
-
-
-.string {
-    .panel-demo(@color-base);
-}
-
-.numeric {
-    .panel-demo(@triadic-secondary)
-}
-
-.inst {
-    .panel-demo(@triadic-tertiary)
-
-}
-
-.enum {
-    .panel-demo(@color-secondary);
-}
-
-.bool {
-    .panel-demo(@color-primary);
 }
 
 
@@ -240,28 +238,91 @@ button.disabled {
 
 
 .card-string {
-    .card(@color-base);
+    .card(@color-secondary-1-0);
 }
 
-
-
 .card-numeric {
-    .card(@triadic-secondary)
+    .card(@color-primary-3);
 }
 
 .card-inst {
-    .card(@triadic-tertiary)
+    .card(@color-complement-3);
 
 }
 
 .card-enum {
-    .card(@color-secondary);
+    .card(@color-secondary-2-4);
 }
 
 .card-bool {
-    .card(@color-primary);
+    .card(grey);
 }
+
+
+.card-action-light {
+    .card(@color-primary-2);
+}
+
+
+.card-action {
+    .card(@color-primary-3);
+}
+
+.card-action-dark {
+    .card(@color-primary-4);
+}
+
 
 .card- {
     .card(lightgrey);
+}
+
+
+//________________________________________________
+//                                                |
+//         Main container                         |
+//                                                |
+//________________________________________________|
+
+
+#main {
+    display: flex;
+    padding: 2rem;
+}
+
+#navigation {
+    flex: 2;
+    border-radius: 6px;
+    padding: 5px;
+    background-color: #aab;
+}
+
+#content {
+    flex: 9;
+    padding: 5px;
+}
+
+#index {
+
+    position: fixed;
+    top: 30px;
+}
+
+.section-title {
+    background-color: #EEE;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 5px;
+
+}
+
+//________________________________________________
+//                                                |
+//         Hide clean button when one shot        |
+//                                                |
+//________________________________________________|
+
+
+#action-one-shot-clean {
+    visibility: hidden;
 }
