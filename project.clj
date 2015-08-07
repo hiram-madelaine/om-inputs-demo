@@ -5,11 +5,12 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "0.0-3308"]
+                 [org.clojure/clojurescript "1.7.48"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [sablono "0.3.4"]
                  [org.omcljs/om "0.8.8"]
-                 [om-inputs "0.3.9-SNAPSHOT"]]
+                 [om-inputs "0.3.9-SNAPSHOT"]
+                 [fipp "0.6.2"]]
 
   :plugins [[lein-cljsbuild "1.0.5"]
             [lein-figwheel "0.3.7"]]
@@ -28,7 +29,19 @@
                          :asset-path "js/compiled/out"
                          :output-to "resources/public/js/compiled/om_inputs_demo.js"
                          :output-dir "resources/public/js/compiled/out"
-                         :source-map-timestamp true }}
+                         :source-map-timestamp true
+                         :foreign-libs
+                         [{:provides ["cljsjs.codemirror"]
+                           :file "resources/public/js/codemirror/codemirror.js"}
+                          {:provides ["cljsjs.codemirror.mode.clojure"]
+                           :requires ["cljsjs.codemirror"]
+                           :file "resources/public/js/codemirror/clojure.js"}
+                          {:provides ["cljsjs.codemirror.addons.closebrackets"]
+                           :requires ["cljsjs.codemirror"]
+                           :file "resources/public/js/codemirror/closebrackets.js"}
+                          {:provides ["cljsjs.codemirror.addons.matchbrackets"]
+                           :requires ["cljsjs.codemirror"]
+                           :file "resources/public/js/codemirror/matchbrackets.js"}]}}
              {:id "min"
               :source-paths ["src/cljs"]
               :compiler {:output-to "resources/public/js/compiled/om_inputs_demo.js"
