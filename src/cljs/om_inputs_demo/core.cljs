@@ -15,8 +15,7 @@
             [cljs.pprint :refer [pprint]]
             [cljsjs.codemirror.mode.clojure]
             [cljsjs.codemirror.addons.matchbrackets]
-            [cljsjs.codemirror.addons.closebrackets]
-            [fipp.clojure])
+            [cljsjs.codemirror.addons.closebrackets])
   (:import [goog.events EventType]
            [goog.net XhrIo]))
 
