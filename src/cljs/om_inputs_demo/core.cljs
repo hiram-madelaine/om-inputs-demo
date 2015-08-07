@@ -194,11 +194,11 @@
 
 (def action-no-reset
   (make-input-comp
-    :action-no-reset
-    {:no-reset s/Str}
-    (fn [a o v ]
-      (om/update! a :action-no-reset v))
-    {:action {:no-reset true}}))
+    {:name   :action-no-reset
+     :schema {:no-reset s/Str}
+     :action (fn [a o v]
+               (om/update! a :action-no-reset v))
+     :opts {:action {:no-reset true}}}))
 
 
 (def demo-action-action-one-shot
@@ -459,8 +459,7 @@
 
                       {:title   "Action's options"
                        :id      "action-options"
-                       :content [{:comp  action-no-reset
-                                  :src   (with-out-str (cljs.repl/source action-no-reset))
+                       :content [{:src   "{:name   :action-no-reset\n :schema {:no-reset s/Str}\n :action (fn [a o v]\n               (om/update! a :action-no-reset v))\n :opts {:action {:no-reset true}}}"
                                   :title "Keep the last posted value"
                                   :desc  "By default the form is reset but with the option :no-reset true
                                                    the last values are kept"
@@ -618,11 +617,11 @@
                                :onClick #(let [ed (om/get-state owner :cm)
                                                cache (om/get-shared owner :cache)
                                                spec (eval cache (str id "-form") (.getValue ed))]
-                                          (om/set-state! owner :spec spec))} "Compile")
+                                          (om/set-state! owner :spec (make-input-comp spec)))} "Compile")
                (when spec
                  (dom/div #js {}
                           (dom/h4 #js {} "Display : ")
-                          (om/build (make-input-comp spec) demo {:state state})
+                          (om/build spec demo {:state state})
                           (dom/div #js {:className ""}
                                    (dom/h4 #js {} "Result : ")
                                    (dom/pre #js {}
