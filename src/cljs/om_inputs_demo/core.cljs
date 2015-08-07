@@ -203,21 +203,21 @@
 
 (def demo-action-action-one-shot
   (make-input-comp
-    :action-one-shot
-    {:one-shot s/Str}
-    (fn [a o v]
-      (om/update! a :action-one-shot v))
-    {:action {:one-shot true}}))
+    {:name   :action-one-shot
+     :schema {:one-shot s/Str}
+     :action (fn [a o v]
+       (om/update! a :action-one-shot v))
+     :opts {:action {:one-shot true}}}))
 
 (def demo-action-action-resetable
   (make-input-comp
-    :action-resetable
-    {:resetable s/Str}
-    (fn [a o v]
-      (om/update! a :action-resetable v))
-    (fn [a o]
-      (prn "Let's create an other item !"))
-    {:action {:one-shot true}}))
+    {:name :action-resetable
+     :schema {:resetable s/Str}
+     :action (fn [a o v]
+       (om/update! a :action-resetable v))
+     :clean (fn [a o]
+       (prn "Let's create an other item !"))
+     :opts {:action {:one-shot true}}}))
 
 
 
@@ -230,27 +230,25 @@
 
   (def async-action
     (make-input-comp
-      :async-action
-      {:async-action s/Str}
-      (fn [a o v c]
-        (go
-          (<! (timeout 1000))
-          (om/update! a :async-action v)
-          (>! c [:ok]))
-        )
-      {:action {:async true}}))
+      {:name :async-action
+       :schema {:async-action s/Str}
+       :action (fn [a o v c]
+         (go
+           (<! (timeout 1000))
+           (om/update! a :async-action v)
+           (>! c [:ok])))
+       :opts {:action {:async true}}}))
 
 
 (def async-action-error
   (make-input-comp
-    :async-action-error
-    {:async-action-error s/Str}
-    (fn [a o v c]
-      (go
-        (<! (timeout 1000))
-        (>! c [:ko]))
-      )
-    {:action {:async true}}))
+    {:name :async-action-error
+     :schema {:async-action-error s/Str}
+     :action (fn [a o v c]
+             (go
+               (<! (timeout 1000))
+               (>! c [:ko])))
+     :opts {:action {:async true}}}))
 
 
 ;________________________________________________
@@ -356,7 +354,7 @@
                                   :title "Date"
                                   :desc  "With the google Closure DatePicker, the rendering is the same across browsers"
                                   :style "inst"}
-                                 {:src   "{:name   :demo-enum\n :schema {:langage (s/enum \"Clojure\"\n         \"clojureScript\"\n        \"ClojureCLR\")}\n :action (fn [app owner result]\n     (om/update! app :demo-enum result))}"
+                                 {:src   "{:name   :demo-enum\n :schema {:langage (s/enum \"Clojure\"\n                           \"clojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n     (om/update! app :demo-enum result))}"
                                   :k     :demo-enum
                                   :title "Enum"
                                   :desc  "An enum is rendered by default with a select. We know this is not the best fot the UX. You have options to change the display."
@@ -378,48 +376,52 @@
                                   :title "Optional value"}]}
                       {:title   "UX variation around Integer"
                        :id      "integer-variations"
-                       :content [{
-                                  :src   "{:name   :demo-num-stepper\n :schema {:guests s/Int}\n :action (fn [app owner result]\n (om/update! app :demo-num-stepper result))\n :opts {:guests {:type \"stepper\"}\n    :init   {:guests 1}}}"
+                       :content [{:src   "{:name   :demo-num-segmented\n :schema {:guests s/Int}\n :action (fn [app owner result]\n    (om/update! app :demo-num-segmented result))\n :opts\n {:guests\n  {:type \"range-btn-group\"\n   :attrs {:min 1 :max 8 :step 1}}}}\n"
+                                  :k     :demo-num-segmented
+                                  :title "Segmented control for Integer adjustement"
+                                  :desc  "A numeric field can be displayed as a stepper"
+                                  :style "enum"}
+                                 {
+                                  :src   "{:name   :demo-num-stepper\n :schema {:guests s/Int}\n :action (fn [app owner result]\n (om/update! app :demo-num-stepper result))\n :opts {:guests\n  {:type \"stepper\" \n   :attrs {:min 2 :max 8 :step 2}}\n :init   {:guests 2}}}\n"
                                   :k     :demo-num-stepper
                                   :title "Stepper for Integer adjustement"
                                   :desc  "A numeric field can be displayed as a stepper"
                                   :style "numeric"}
-                                 {:src   "{:name   :demo-num-segmented\n :schema {:guests s/Int}\n :action (fn [app owner result]\n    (om/update! app :demo-num-segmented result))\n :opts\n {:guests\n  {:type \"range-btn-group\"\n   :attrs {:min 1 :max 8 :step 1}}}}"
-                                  :k     :demo-num-segmented
-                                  :title "Segmented control for Integer adjustement"
-                                  :desc  "A numeric field can be displayed as a stepper"
-                                  :style "numeric"}]}
+                                 ]}
+                      {:title   "UX variations around lists"
+                       :id      "lists-variations"
+                       :content [{:src   "{:name   :demo-enum\n :schema {:language (s/enum \"Clojure\"\n                           \"ClojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:language {:type \"btn-group\"}}}"
+                                  :k     :demo-enum
+                                  :title "handle en enum"
+                                  :desc  "An enum is displayed by default with a select"
+                                  :style "string "}
+                                 {:k     :demo-enum
+                                  :src   "{:name   :demo-enum\n :schema {:language (s/enum \"Clojure\"\n                           \"ClojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:language {:type \"radio-group\"}}}"
+                                  :title "Display an enum as radio liste"
+                                  :desc  "An enum is displayed by default with a select."
+                                  :style "inst"}
+                                 {:src   "{:name   :demo-enum\n :schema {:language (s/enum \"Clojure\"\n                           \"ClojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:language {:type \"radio-group-inline\"}}}"
+                                  :k     :demo-enum
+                                  :title "Display an enum as radio inline"
+                                  :desc  "An enum is displayed by default with a select"
+                                  :style "numeric"}
+
+                                 ]}
                       {:title   "UX Around Date Picker"
                        :id      "date-options"
-                       :content [{:src   "{:name   :demo-date\n :schema {:date s/Inst}\n :action (fn [app owner result]\n   (om/update! app :demo-date result))\n :opts {:date {:type \"date\"}}}"
+                       :content [{:src   "{:name   :demo-date\n :schema {:date s/Inst}\n :action (fn [app owner result]\n   (om/update! app :demo-date result))\n :opts {:date {:type \"date\"}}}\n"
                                   :k     :demo-date
                                   :title "Want the native Chrome date picker ?"
                                   :desc  "If you want to use the native chrome date input add the option :type=\"date\""
                                   :style "inst"
                                   }
-                                 {:src   "{:name   :demo-date-now\n :schema {:date s/Inst}\n :action (fn [app owner result]\n   (om/update! app :demo-date-now result))\n :opts {:date {:type \"now\"}}}"
+                                 {:src   "{:name   :demo-date-now\n :schema {:date s/Inst}\n :action (fn [app owner result]\n   (om/update! app :demo-date-now result))\n :opts {:date {:type \"now\"}}}\n"
                                   :k     :demo-date-now
                                   :title "Capture a precise instant"
                                   :desc  "If you want to capture a precise instant just click "
-                                  :style "inst"
+                                  :style "string"
                                   }]}
-                      {:title   "UX variations around lists"
-                       :id      "lists-variations"
-                       :content [{:k     :demo-enum
-                                  :src   "{:name   :demo-enum\n :schema {:langage (s/enum \"Clojure\"\n                           \"clojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:langage {:type \"radio-group\"}}}"
-                                  :title "Display an enum as radio liste"
-                                  :desc  "An enum is displayed by default with a select."
-                                  :style "enum"}
-                                 {:src   "{:name   :demo-enum\n :schema {:langage (s/enum \"Clojure\"\n                           \"clojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:langage {:type \"radio-group-inline\"}}}"
-                                  :k     :demo-enum
-                                  :title "Display an enum as radio inline"
-                                  :desc  "An enum is displayed by default with a select"
-                                  :style "enum"}
-                                 {:src   "{:name   :demo-enum\n :schema {:langage (s/enum \"Clojure\"\n                           \"clojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:langage {:type \"btn-group\"}}}"
-                                  :k     :demo-enum
-                                  :title "handle en enum"
-                                  :desc  "An enum is displayed by default with a select"
-                                  :style "enum"}]}
+
                       {:title   "Constraint what can be typed"
                        :id      "constraint-typing"
                        :content [{:comp  demo-regex
@@ -465,15 +467,13 @@
                                                    the last values are kept"
                                   :k     :action-no-reset
                                   :style "action-dark"}
-                                 {:comp  demo-action-action-one-shot
-                                  :src   (with-out-str (cljs.repl/source demo-action-action-one-shot))
+                                 {:src   "{:name   :action-one-shot\n :schema {:one-shot s/Str}\n :action (fn [a o v]\n       (om/update! a :action-one-shot v))\n :opts {:action {:one-shot true}}}"
                                   :title "This action can be done only once"
                                   :desc  "with this options {:action {:one-shot true}} the action can be triggered once
                                                           \"Clean\" button has no action and can be hidden with CSS"
                                   :k     :action-one-shot
                                   :style "action"}
-                                 {:comp  demo-action-action-resetable
-                                  :src   (with-out-str (cljs.repl/source demo-action-action-resetable))
+                                 {:src   "{:name :action-resetable\n     :schema {:resetable s/Str}\n :action (fn [a o v]\n       (om/update! a :action-resetable v))\n :clean (fn [a o]\n       (prn \"Let's create an other item !\"))\n :opts {:action {:one-shot true}}}"
                                   :title "Cycle between action & clean"
                                   :desc  "with this options {:action {:one-shot true}} the action can be triggered once
                                                          but as a clean action is provided then the form can be cleaned and resubmitted again."
