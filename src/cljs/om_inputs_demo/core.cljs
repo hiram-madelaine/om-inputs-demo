@@ -611,6 +611,7 @@
     om/IRenderState
     (render-state [_ {:keys [spec] :as  state}]
       (dom/div #js {}
+               (dom/h4 #js {} "Source : ")
                (dom/textarea #js {:id (str id "-ed")})
                (dom/button #js {:type "button"
                                :className "btn btn-default btn-compile"
@@ -645,6 +646,22 @@
     [owner k]
     (with-out-str (pprint (get-in (om/get-shared owner) [:i18n "fr" k]))))
 
+
+
+(defn i18n-comp
+  [{:keys [id k comp src src-i18n style] :as demo} owner]
+  (om/component
+    (dom/div #js {}
+             (dom/h4 #js {} "i18n : ")
+             (dom/pre #js {}
+              (dom/code #js {:className "clojure"}
+                        (or src
+                            (i18n-as-str owner k))))
+             (dom/h4 #js {} "Display : ")
+             (dom/div #js {:id (str id "-form")})
+             (om/build comp demo {:state (om/get-state owner)}))))
+
+
   (defn card-view
     [{:keys [id title desc k comp src src-i18n style] :as demo} owner]
     (reify
@@ -657,23 +674,10 @@
                   (dom/div #js {:className "card-body"}
                            (when desc (dom/div #js {:className "well"}
                                                desc))
-                           (dom/h4 #js {} "Source : ")
-                           (when (or src src-i18n)
-                             (dom/pre #js {}
-                                     (dom/code #js {:className "clojure"}
-                                               (or src
-                                                   (i18n-as-str owner k))))
-                             (om/build code-mirror-comp demo {:state state}))
-                           #_(dom/h4 #js {} "Display : ")
-                           #_(dom/div #js {:id (str id "-form")})
-                           #_(om/build comp demo {:state (om/get-state owner)})
-
-                           #_(dom/div #js {:className ""}
-                                    (dom/h4 #js {} "Result : ")
-                                    (dom/pre #js {}
-                                             (dom/code #js {:className "clojure"}
-                                                       (print-str (get demo k))))))
-                  (dom/div #js{:className "card-footer"} ""))))))
+                           (if src-i18n
+                             (om/build i18n-comp demo {:state state})
+                             (om/build code-mirror-comp demo {:state state})))
+                   (dom/div #js{:className "card-footer"} ""))))))
 
   (defn section-view
     [{:keys [title id] :as section} owner]
