@@ -21,205 +21,6 @@
 
 (enable-console-print!)
 
-
-
-
-;________________________________________________
-;                                                |
-;         The usual suspects                     |
-;                                                |
-;________________________________________________|
-
-(def demo-string
-  (make-input-comp
-    {:name :demo-string
-     :schema {:string s/Str}
-     :action (fn [app owner result]
-       (om/update! app :demo-1 result))}))
-
-(def demo-num
-  (make-input-comp
-    {:name   :demo-num
-     :schema {:number s/Num}
-     :action (fn [app owner result]
-               (om/update! app :demo-num result))}))
-
-(def demo-int
-  (make-input-comp
-    {:name   :demo-int
-     :schema {:integer s/Int}
-     :action (fn [app owner result]
-        (om/update! app :demo-int result))}))
-
-
-  (def demo-bool
-    (make-input-comp
-      {:name   :demo-bool
-
-       :schema {:boolean s/Bool}
-       :action (fn [app owner result]
-                 (om/update! app :demo-bool result))
-       :opts {:init {:boolean false}}}))
-
-  (def demo-inst
-    (make-input-comp
-      {:name   :demo-inst
-       :schema {:Inst s/Inst}
-       :action (fn [app owner result]
-                 (om/update! app :demo-inst result))}))
-
-  (def demo-enum
-    (make-input-comp
-      {:name   :demo-enum
-       :schema {:langage (s/enum "Clojure"
-                                 "clojureScript"
-                                 "ClojureCLR")}
-       :action (fn [app owner result]
-                 (om/update! app :demo-enum result))}))
-;________________________________________________
-;                                                |
-;         Variation around Numbers               |
-;                                                |
-;________________________________________________|
-
-  (def demo-num-stepper
-    (make-input-comp
-      {:name   :demo-num-stepper
-       :schema {:guests s/Int}
-       :action (fn [app owner result]
-                 (om/update! app :demo-num-stepper result))
-       :opts {:guests {:type "stepper"}
-              :init   {:guests 1}}}))
-
-(def demo-num-segmented
-  (make-input-comp
-    {:name   :demo-num-segmented
-     :schema {:guests s/Int}
-     :action (fn [app owner result]
-               (om/update! app :demo-num-segmented result))
-     :opts {:guests {:type  "range-btn-group"
-               :attrs {:min 1 :max 8 :step 1}}}}))
-
-
-;________________________________________________
-;                                                |
-;         Native Date Picker                     |
-;                                                |
-;________________________________________________|
-
-(def demo-date
-  (make-input-comp
-    {:name   :demo-date
-     :schema {:date s/Inst}
-     :action (fn [app owner result]
-               (om/update! app :demo-date result))
-     :opts {:date {:type "date"}}}))
-
-
-(def demo-date-now
-  (make-input-comp
-    {:name   :demo-date-now
-     :schema {:date s/Inst}
-     :action (fn [app owner result]
-               (om/update! app :demo-date-now result))
-     :opts {:date {:type "now"}}}))
-
-;________________________________________________
-;                                                |
-;         Variation around Lists                 |
-;                                                |
-;________________________________________________|
-
-
-(def demo-enum-radio
-  (make-input-comp
-    {:name   :demo-enum
-     :schema {:langage (s/enum "Clojure"
-                               "clojureScript"
-                               "ClojureCLR")}
-     :action (fn [app owner result]
-               (om/update! app :demo-enum result))
-     :opts {:langage {:type "radio-group"}}}))
-
-(def demo-enum-inline
-  (make-input-comp
-    :demo-enum
-    {:langage (s/enum "Clojure"
-                      "clojureScript"
-                      "ClojureCLR")}
-    (fn [app owner result]
-      (om/update! app :demo-enum result))
-    {:langage {:type "radio-group-inline"}}))
-
-(def demo-enum-btn
-  (make-input-comp
-    :demo-enum
-    {:langage (s/enum "Clojure"
-                      "clojureScript"
-                      "ClojureCLR")}
-    (fn [app owner result]
-      (om/update! app :demo-enum result))
-    {:langage {:type "btn-group"}}))
-
-;________________________________________________
-;                                                |
-;         Opitonal                               |
-;                                                |
-;________________________________________________|
-
-
-  (def demo-optional-field
-    (make-input-comp
-      {:name   :demo-optional-field
-       :schema {:email                 s/Str
-                (s/optional-key :name) s/Str}
-       :action (fn [a o v]
-                 (om/update! a :demo-optional-field v))}))
-
-(def demo-optional-value
-  (make-input-comp
-    {:name   :demo-optional-value
-     :schema {:email s/Str
-              :name  (s/maybe s/Str)}
-     :action (fn [a o v]
-       (om/update! a :demo-optional-value v))}))
-
-
-;________________________________________________
-;                                                |
-;         Variation around Actions               |
-;                                                |
-;________________________________________________|
-
-(def action-no-reset
-  (make-input-comp
-    {:name   :action-no-reset
-     :schema {:no-reset s/Str}
-     :action (fn [a o v]
-               (om/update! a :action-no-reset v))
-     :opts {:action {:no-reset true}}}))
-
-
-(def demo-action-action-one-shot
-  (make-input-comp
-    {:name   :action-one-shot
-     :schema {:one-shot s/Str}
-     :action (fn [a o v]
-       (om/update! a :action-one-shot v))
-     :opts {:action {:one-shot true}}}))
-
-(def demo-action-action-resetable
-  (make-input-comp
-    {:name :action-resetable
-     :schema {:resetable s/Str}
-     :action (fn [a o v]
-       (om/update! a :action-resetable v))
-     :clean (fn [a o]
-       (prn "Let's create an other item !"))
-     :opts {:action {:one-shot true}}}))
-
-
-
 ;________________________________________________
 ;                                                |
 ;         Asyn Actions                           |
@@ -249,21 +50,6 @@
                (>! c [:ko])))
      :opts {:action {:async true}}}))
 
-
-;________________________________________________
-;                                                |
-;         Validations                            |
-;                                                |
-;________________________________________________|
-
-  (def demo-validation-email
-    (make-input-comp
-      {:name   :demo-validation-email
-       :schema {:email s/Str}
-       :action (fn [a o v]
-                 (om/update! a :demo-validation-email v))
-       :opts {:validations
-        [[:email [:email] :bad-email]]}}))
 
 
 ;________________________________________________
@@ -296,23 +82,6 @@
       (om/update! a :demo-help-placeholder v))))
 
 
-
-(defn action
-  [k]
-  (fn
-    [app owner result]
-    (om/update! app k result)))
-
-(def demo-regex
-  (make-input-comp
-    :demo-regex
-    {:regex #"^[A-Z]{0,2}[0-9]{0,12}$"}
-    (action :demo-regex)))
-
-
-;; define your app data so that it doesn't get over-written on reload
-
-
 (def i18n {:i18n {"fr" {:errors                {:mandatory "Cette donnée est obligatoire"
                                                 :bad-email "Invalid email"}
                         :demo-help-info        {:email {:info "Your email will only be used to send your travel details"}}
@@ -323,7 +92,7 @@
                         :demo-help-info        {:email {:info "Your email will only be used to send your travel details"}}
                         :demo-help-desc        {:email {:desc "We won't spam you, ever"}}
                         :demo-help-placeholder {:email {:ph   "you.email@org"}}
-                         }}})
+                        :booking {:title "Your information"} }}})
 
 (def app-state (atom [{:title   "Basic types : The usual suspects"
                        :id      "usual-suspects"
@@ -333,15 +102,15 @@
                                       [:li "The name of the component"]
                                       [:li "A prismatic Schema"]
                                       [:li "An action function"]]])
-                       :content [{:src   "{:name :demo-string\n :schema {:name s/Str}\n :action (fn [app owner result]\n     (om/update! app :demo-1 result))}"
-                                  :k     :demo-1
+                       :content [{:k     :demo-1
                                   :title "String"
                                   :desc "Let's start with the String data"
+                                  :src   "{:name :demo-string\n :schema {:name s/Str}\n :action (fn [app owner result]\n     (om/update! app :demo-1 result))}"
                                   :style "string"}
-                                 {:src   "{:name   :demo-num\n :schema {:weight s/Num}\n :action (fn [app owner result]\n    (om/update! app :demo-num result))}"
-                                  :k     :demo-num
+                                 {:k     :demo-num
                                   :title "Number"
                                   :desc  "You can only type numeric characters : numbers and ."
+                                  :src   "{:name   :demo-num\n :schema {:weight s/Num}\n :action (fn [app owner result]\n    (om/update! app :demo-num result))}"
                                   :style "numeric"}
                                  {:src   "{:name   :demo-int\n :schema {:age s/Int}\n :action (fn [app owner result]\n     (om/update! app :demo-int result))}"
                                   :k     :demo-int
@@ -423,8 +192,7 @@
 
                       {:title   "Constraint what can be typed"
                        :id      "constraint-typing"
-                       :content [{:comp  demo-regex
-                                  :src   (with-out-str (cljs.repl/source demo-regex))
+                       :content [{:src   "{:name :demo-regex\n     :schema {:regex #\"^[A-Z]{0,2}[0-9]{0,12}$\"}\n     :action (fn [app owner result]\n   (om/update! app :demo-regex result))}"
                                   :k     :demo-regex
                                   :title "Assist the keyboard input of a String using a Regex"
                                   :desc  "During typing, the string must conform to the regex.
@@ -439,6 +207,7 @@
                       {:title   "i18n - Help your users with information"
                        :id      "help-users"
                        :content [{:comp     demo-help-info
+                                  :type :i18n
                                   :title    "Add an info tooltip"
                                   :desc     "When you enter the field, a tooltip with an help message appears.
                                       The tooltip disappears when you leave the field"
@@ -446,12 +215,14 @@
                                   :k        :demo-help-info
                                   :style    "string"}
                                  {:comp     demo-help-desc
+                                  :type :i18n
                                   :title    "Add a field description"
                                   :desc     "Adds the description below the field name"
                                   :src-i18n true
                                   :k        :demo-help-desc
                                   :style    "string"}
                                  {:comp     demo-help-placeholder
+                                  :type :i18n
                                   :title    "Add a placeholder"
                                   :desc     "Placeholders are often discouraged"
                                   :src-i18n true
@@ -480,7 +251,8 @@
                                   :style "action-light"}]}
                       {:title   "Asynchronous actions"
                        :id      "asynchronous-actions"
-                       :content [{:comp  async-action
+                       :content [{:type :comp
+                                  :comp  async-action
                                   :src   (with-out-str (repl/source async-action))
                                   :title "Action can be asynchronous"
                                   :desc  "When the action is asynchronous the action fn has an extra parameter
@@ -488,13 +260,21 @@
                                                      Respectively with [:ok] or failed with [:ko error]"
                                   :k     :async-action
                                   :style "action"}
-                                 {:comp  async-action-error
+                                 {:type :comp
+                                  :comp  async-action-error
                                   :src   (with-out-str (repl/source async-action-error))
                                   :title "Asynchronous action and errors"
                                   :desc  "When an error occurs put [:ko] in the channel.
                                       In this example the result will always be nil"
                                   :k     :async-action-error
-                                  :style "action"}]}]))
+                                  :style "action"}]}
+                      {:title "Complete forms"
+                       :id "complete-forms"
+                       :content [{:title "Booking reservation"
+                                  :desc "An hypothetic booking form"
+                                  :k "booking"
+                                  :style "string"
+                                  :src "{:name :booking\n :schema {:email  s/Str\n\t\t  :name s/Str\n\t\t  :departure  s/Inst\n\t\t  :arrival s/Inst\n\t\t  :guests s/Int}\n :action (fn [a o v]\n       (om/update! a :booking v))\n :opts {:init {:guests 1\n\t\t\t   :departure (js/Date.)}\n\t\t:order [:email :name :guests :departure :arrival ]\n\t\t:guests {:type \"stepper\"\n\t\t\t\t :attrs {:min 1 :max 6}}}}"}]}]))
 
 ;________________________________________________
 ;                                                |
@@ -572,9 +352,9 @@
   (defn navigation-view
     [app owner]
     (om/component
-      (dom/div #js {:id "navigation"}
+      (dom/div #js {:className "navigation"}
                (html
-                 [:div {:id "index"}
+                 [:div {:className "index"}
                   [:div {:class "list-group"}
                    (om/build-all nav-entry-view app)]]))))
 
@@ -603,7 +383,8 @@
         (gobj/set "value" code)))))
 
 
-(defn code-mirror-comp
+(defn editor-comp
+  "Display a demo as a CodeMirror editor"
   [{:keys [id src k] :as demo} owner]
   (reify
     om/IRenderState
@@ -647,21 +428,40 @@
 
 
 (defn i18n-comp
-  [{:keys [id k comp src src-i18n style] :as demo} owner]
+  [{:keys [id k comp] :as demo} owner]
   (om/component
     (dom/div #js {}
              (dom/h4 #js {} "i18n : ")
              (dom/pre #js {}
               (dom/code #js {:className "clojure"}
-                        (or src
-                            (i18n-as-str owner k))))
+                        (i18n-as-str owner k)))
              (dom/h4 #js {} "Display : ")
              (dom/div #js {:id (str id "-form")})
              (om/build comp demo {:state (om/get-state owner)}))))
 
+(defn comp-view
+  "Display a predefined form"
+  [{:keys [k comp src] :as demo} owner]
+  (reify
+    om/IRenderState
+    (render-state [_ state]
+      (dom/div #js {}
+               (dom/h4 #js {} "Source : ")
+               (dom/pre #js {}
+                        (dom/code #js {:className "clojure"}
+                                  src))
+               (dom/h4 #js {} "Display : ")
+               (om/build comp demo {:state (om/get-state owner)})
+               (dom/div #js {:className ""}
+                        (dom/h4 #js {} "Result : ")
+                        (dom/pre #js {}
+                                 (dom/code #js {:className "clojure"}
+                                           (print-str (get demo k)))))))))
+
 
   (defn card-view
-    [{:keys [id title desc k comp src src-i18n style] :as demo} owner]
+    "Display a demo as a Card "
+    [{:keys [type title desc style] :as demo} owner]
     (reify
       om/IRenderState
       (render-state [_ state]
@@ -672,12 +472,52 @@
                   (dom/div #js {:className "card-body"}
                            (when desc (dom/div #js {:className "well"}
                                                desc))
-                           (if src-i18n
-                             (om/build i18n-comp demo {:state state})
-                             (om/build code-mirror-comp demo {:state state})))
+                           (condp = type
+                             :i18n (om/build i18n-comp demo {:state state})
+                             :comp  (om/build comp-view demo {:state state})
+                             (om/build editor-comp demo {:state state})))
                    (dom/div #js{:className "card-footer"} ""))))))
 
+(defn playground
+  "Playground"
+  [{:keys [id k title desc style src] :as demo} owner]
+  (reify
+    om/IDidMount
+    (did-mount [_]
+      (let [ed (textarea->cm (str id "-ed") src)]
+        (om/set-state! owner :cm ed)))
+    om/IRenderState
+    (render-state [_ {:keys [spec] :as  state}]
+      (dom/div #js {:className "playground"}
+               (dom/div #js {:className (in/styles (str "card-" style) "playground")}
+                        (dom/div #js {:className "card-header"}
+                                 (dom/label #js {} title))
+                        (dom/div #js {:className "card-body"}
+                                 (dom/div #js {:className "play-body"}
+                                          (dom/div #js {:className "play-source"}
+                                           (when desc (dom/div #js {:className "well"}
+                                                               desc))
+                                           (dom/h4 #js {} "Source : ")
+                                           (dom/textarea #js {:id (str id "-ed")})
+                                           (dom/button #js {:type      "button"
+                                                            :className "btn btn-default btn-compile"
+                                                            :onClick   #(let [ed (om/get-state owner :cm)
+                                                                              cache (om/get-shared owner :cache)
+                                                                              spec (eval cache (str id "-form") (.getValue ed))]
+                                                                         (om/set-state! owner :spec (make-input-comp spec)))} "Compile"))
+                                   (when spec
+                                     (dom/div #js {:className "play-render"}
+                                              (om/build spec demo {:state state})
+                                              (dom/div #js {:className "play-result"}
+                                                       (dom/h4 #js {} "Result : ")
+                                                       (dom/pre #js {}
+                                                                (dom/code #js {:className "clojure"}
+                                                                          (print-str (get demo k)))))))))
+                        (dom/div #js{:className "card-footer"} ""))))))
+
+
   (defn section-view
+    "Display a section that contains demos."
     [{:keys [title id] :as section} owner]
     (reify
       om/IRenderState
@@ -688,16 +528,34 @@
                             (om/build-all card-view (:content section) {:init-state state}))))))
 
 (defn content-view
+  "Display the demo sections. "
     [app owner]
     (reify
       om/IRenderState
       (render-state
         [_ state]
-        (apply dom/div #js {:id "content"}
+        (apply dom/div #js {:className "content"}
                  (om/build-all section-view app {:init-state state})))))
 
 
-
+(def booking '{:name :booking
+               :schema {:email  s/Str
+                        :name s/Str
+                        :departure  s/Inst
+                        :arrival s/Inst
+                        :guests s/Int
+                        :bedrooms s/Int
+                        :room-type (s/enum "house" "appartement" "room")}
+               :action (fn [a o v]
+                         (om/update! a :booking v))
+               :opts {:init {:guests 1
+                             :departure (js/Date.)}
+                      :room-type {:type "btn-group"}
+                      :bedrooms {:type "range-btn-group"
+                                 :attrs {:min 1 :max 6 }}
+                      ;:order [:email :name :guests :room-type  :departure :arrival]
+                      :guests {:type "stepper"
+                               :attrs {:min 1 :max 6}}}})
 ;________________________________________________
 ;                                                |
 ;         app component                          |
@@ -715,9 +573,17 @@
          {:lang "en"})
        om/IRenderState
        (render-state [_ state]
-         (dom/div #js {:id "main"}
-                  (om/build navigation-view app)
-                  (om/build content-view app {:init-state state})))))
+         (dom/div #js {}
+                  (dom/div #js {:className "main"}
+                   (om/build navigation-view app)
+                   (om/build content-view app {:init-state state}))
+                  (dom/div #js {:className "main"}
+                           (om/build navigation-view app)
+                           (om/build playground {:title "Booking reservation"
+                                                 :desc  "An hypothetic booking form"
+                                                 :k     "booking"
+                                                 :style "string"
+                                                 :src   (with-out-str (pprint booking))} {:init-state state}))))))
    app-state
    {:target (. js/document (getElementById "app"))
     :shared (merge i18n {:cache cache})}))
