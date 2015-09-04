@@ -13,9 +13,11 @@
             [cljs.core.async :refer [chan put! >! <! alts! timeout]]
             [cljs.js :as cljs]
             [cljs.pprint :refer [pprint]]
+            [cljsjs.codemirror]
             [cljsjs.codemirror.mode.clojure]
             [cljsjs.codemirror.addons.matchbrackets]
-            [cljsjs.codemirror.addons.closebrackets])
+            [cljsjs.codemirror.addons.closebrackets]
+            [cognitect.transit :as t])
   (:import [goog.events EventType]
            [goog.net XhrIo]))
 
@@ -47,7 +49,7 @@
      :action (fn [a o v c]
              (go
                (<! (timeout 1000))
-               (>! c [:ko])))
+               (>! c [:ko "Internal Server Error"])))
      :opts {:action {:async true}}}))
 
 
@@ -93,188 +95,245 @@
                         :demo-help-desc        {:email {:desc "We won't spam you, ever"}}
                         :demo-help-placeholder {:email {:ph   "you.email@org"}}
                         :booking {:title "Your information"} }}})
+(def booking '{:name :booking
+               :schema {:email  s/Str
+                        :name s/Str
+                        :departure  s/Inst
+                        :arrival s/Inst
+                        :guests s/Int
+                        :bedrooms s/Int
+                        :room-type (s/enum "house" "appartement" "room")}
+               :action (fn [a o v]
+                         (om/update! a :booking v))
+               :opts {:init {:guests 1
+                             :departure (js/Date.)}
+                      :room-type {:type "btn-group"}
+                      :bedrooms {:type "range-btn-group"
+                                 :attrs {:min 1 :max 6 }}
+                      ;:order [:email :name :guests :room-type  :departure :arrival]
+                      :guests {:type "stepper"
+                               :attrs {:min 1 :max 6}}}})
 
-(def app-state (atom [{:title   "Basic types : The usual suspects"
-                       :id      "usual-suspects"
-                       :desc  (html [:div
-                                     [:h5 "To create a form you need :"]
-                                     [:ul
-                                      [:li "The name of the component"]
-                                      [:li "A prismatic Schema"]
-                                      [:li "An action function"]]])
-                       :content [{:k     :demo-1
-                                  :title "String"
-                                  :desc "Let's start with the String data"
-                                  :src   "{:name :demo-string\n :schema {:name s/Str}\n :action (fn [app owner result]\n     (om/update! app :demo-1 result))}"
-                                  :style "string"}
-                                 {:k     :demo-num
-                                  :title "Number"
-                                  :desc  "You can only type numeric characters : numbers and ."
-                                  :src   "{:name   :demo-num\n :schema {:weight s/Num}\n :action (fn [app owner result]\n    (om/update! app :demo-num result))}"
-                                  :style "numeric"}
-                                 {:src   "{:name   :demo-int\n :schema {:age s/Int}\n :action (fn [app owner result]\n     (om/update! app :demo-int result))}"
-                                  :k     :demo-int
-                                  :title "Integer"
-                                  :desc  "You can only type numeric characters"
-                                  :style "numeric"}
-                                 {:src   "{:name   :demo-inst\n :schema {:departure s/Inst}\n :action (fn [app owner result]\n (om/update! app :demo-inst result))}"
-                                  :k     :demo-inst
-                                  :title "Date"
-                                  :desc  "With the google Closure DatePicker, the rendering is the same across browsers"
-                                  :style "inst"}
-                                 {:src   "{:name   :demo-enum\n :schema {:langage (s/enum \"Clojure\"\n                           \"clojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n     (om/update! app :demo-enum result))}"
-                                  :k     :demo-enum
-                                  :title "Enum"
-                                  :desc  "An enum is rendered by default with a select. We know this is not the best fot the UX. You have options to change the display."
-                                  :style "enum"}
-                                 {:src   "{:name  :demo-bool\n :schema {:boolean s/Bool}\n :action (fn [app owner result]\n     (om/update! app :demo-bool result))\n :opts {:init {:boolean false}}}"
-                                  :k     :demo-bool
-                                  :title "Boolean"
-                                  :desc  "A boolean is by default represented with a checkbox"
-                                  :style "bool"}]}
-                      {:title   "Optional data"
-                       :id      "optional-data"
-                       :content [{:src   "{:name   :demo-optional-field\n :schema {:email s/Str\n          (s/optional-key :name) s/Str}\n :action (fn [a o v]\n    (om/update! a :demo-optional-field v))}"
-                                  :k     :demo-optional-field
-                                  :desc  "A field is marked optional with the schema (schema/optional-key)"
-                                  :title "Optional field"}
-                                 {:src   "{:name   :demo-optional-value\n     :schema {:email s/Str\n              :name  (s/maybe s/Str)}\n     :action (fn [a o v]\n       (om/update! a :demo-optional-value v))}"
-                                  :k     :demo-optional-value
-                                  :desc  "If you want the key to be present mark the value as maybe"
-                                  :title "Optional value"}]}
-                      {:title   "UX variation around Integer"
-                       :id      "integer-variations"
-                       :content [{:src   "{:name   :demo-num-segmented\n :schema {:guests s/Int}\n :action (fn [app owner result]\n    (om/update! app :demo-num-segmented result))\n :opts\n {:guests\n  {:type \"range-btn-group\"\n   :attrs {:min 1 :max 8 :step 1}}}}\n"
-                                  :k     :demo-num-segmented
-                                  :title "Segmented control for Integer adjustement"
-                                  :desc  "A numeric field can be displayed as a stepper"
-                                  :style "enum"}
-                                 {
-                                  :src   "{:name   :demo-num-stepper\n :schema {:guests s/Int}\n :action (fn [app owner result]\n (om/update! app :demo-num-stepper result))\n :opts {:guests\n  {:type \"stepper\" \n   :attrs {:min 2 :max 8 :step 2}}\n :init   {:guests 2}}}\n"
-                                  :k     :demo-num-stepper
-                                  :title "Stepper for Integer adjustement"
-                                  :desc  "A numeric field can be displayed as a stepper"
-                                  :style "numeric"}
-                                 ]}
-                      {:title   "UX variations around lists"
-                       :id      "lists-variations"
-                       :content [{:src   "{:name   :demo-enum\n :schema {:language (s/enum \"Clojure\"\n                           \"ClojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:language {:type \"btn-group\"}}}"
-                                  :k     :demo-enum
-                                  :title "handle en enum"
-                                  :desc  "An enum is displayed by default with a select"
-                                  :style "string "}
-                                 {:k     :demo-enum
-                                  :src   "{:name   :demo-enum\n :schema {:language (s/enum \"Clojure\"\n                           \"ClojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:language {:type \"radio-group\"}}}"
-                                  :title "Display an enum as radio liste"
-                                  :desc  "An enum is displayed by default with a select."
-                                  :style "inst"}
-                                 {:src   "{:name   :demo-enum\n :schema {:language (s/enum \"Clojure\"\n                           \"ClojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:language {:type \"radio-group-inline\"}}}"
-                                  :k     :demo-enum
-                                  :title "Display an enum as radio inline"
-                                  :desc  "An enum is displayed by default with a select"
-                                  :style "numeric"}
+(def app-state (atom {:playground {:title "Booking reservation"
+                                   :desc  "An hypothetic booking form"
+                                   :k     "booking"
+                                   :style "string"
+                                   :src   (with-out-str (pprint booking))}
+                      :demos      [{:title   "Basic types : The usual suspects"
+                                    :id      "usual-suspects"
+                                    :desc    (html [:div
+                                                    [:h5 "To create a form you need :"]
+                                                    [:ul
+                                                     [:li "The name of the component as a Keyword"]
+                                                     [:li "A prismatic Schema describing the data (prismactic/schema is required with the prefix s)"]
+                                                     [:li "An action function taking 3 parameters : the app cursor, the owner and the result map"]]
+                                                    [:div "To use an example, click on \"Compile\"; The form will appear in the display section.
+                                       The result section show the app cursor value"]
+                                                    [:div "Feel free to modifiy the form specification and recompile."]])
+                                    :content [{:k     :demo-1
+                                               :title "String"
+                                               :desc  (html [:div "Let's start with a very simple form containing a single field :name of type String : "
+                                                             [:code "{:name s/Str}"]])
+                                               :src   "{:name :demo-string\n :schema {:name s/Str}\n :action (fn [app owner result]\n     (om/update! app :demo-1 result))}"
+                                               :style "string"}
+                                              {:k     :demo-num
+                                               :title "Number"
+                                               :desc  (html [:div
+                                                             [:div "Need a number ? use the schema : " [:code "s/Num"]]
+                                                             [:div "You'll only be able to type numeric characters : numbers and \".\"\n Try to type alphabetic characters"]])
+                                               :src   "{:name   :demo-num\n :schema {:weight s/Num}\n :action (fn [app owner result]\n    (om/update! app :demo-num result))}"
+                                               :style "numeric"}
+                                              {:k     :demo-int
+                                               :title "Integer"
+                                               :desc  (html [:div
+                                                             [:div "Need an Integer ? use the schema : " [:code "s/Int"]]
+                                                             [:div "You'll only be able to type numeric characters"]])
+                                               :src   "{:name   :demo-int\n :schema {:age s/Int}\n :action (fn [app owner result]\n     (om/update! app :demo-int result))}"
+                                               :style "numeric"}
+                                              {:k     :demo-inst
+                                               :title "Date"
+                                               :desc  (html [:div
+                                                             [:div "Need a Date ? Use the schema : " [:code "s/Inst"]]
+                                                             [:div "With the google Closure DatePicker, the rendering is the same across browsers."]])
+                                               :src   "{:name   :demo-inst\n :schema {:departure s/Inst}\n :action (fn [app owner result]\n (om/update! app :demo-inst result))}"
+                                               :style "inst"}
+                                              {:src   "{:name   :demo-enum\n :schema {:langage (s/enum \"Clojure\"\n                           \"clojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n     (om/update! app :demo-enum result))}"
+                                               :k     :demo-enum
+                                               :title "Enum"
+                                               :desc  (html [:div
+                                                             [:div "Need to pick one item from a list ? Use the schema : " [:code "s/enum"]]
+                                                             [:div "The Select is often not the best choice for the UX but " [:a {:href "#lists-variations"} "you have options to change the display."]]])
+                                               :style "enum"}
+                                              {:src   "{:name  :demo-bool\n :schema {:boolean s/Bool}\n :action (fn [app owner result]\n     (om/update! app :demo-bool result))\n :opts {:init {:boolean false}}}"
+                                               :k     :demo-bool
+                                               :title "Boolean"
+                                               :desc  (html [:div
+                                                             [:div "Need a boolean ? Use the schema : " [:code "s/Bool"]]
+                                                             [:div "A boolean is by default represented with a checkbox"]])
+                                               :style "bool"}]}
+                                   {:title   "Optional data"
+                                    :id      "optional-data"
+                                    :content [{:src   "{:name   :demo-optional-field\n :schema {:email s/Str\n          (s/optional-key :name) s/Str}\n :action (fn [a o v]\n    (om/update! a :demo-optional-field v))}"
+                                               :k     :demo-optional-field
+                                               :desc  "A field is marked optional with the schema (schema/optional-key)"
+                                               :title "Optional field"}
+                                              {:src   "{:name   :demo-optional-value\n     :schema {:email s/Str\n              :name  (s/maybe s/Str)}\n     :action (fn [a o v]\n       (om/update! a :demo-optional-value v))}"
+                                               :k     :demo-optional-value
+                                               :desc  "If you want the key to be present mark the value as maybe"
+                                               :title "Optional value"}]}
+                                   {:title   "UX variation around Integer"
+                                    :id      "integer-variations"
+                                    :content [{:src   "{:name   :demo-num-segmented\n :schema {:guests s/Int}\n :action (fn [app owner result]\n    (om/update! app :demo-num-segmented result))\n :opts\n {:guests\n  {:type \"range-btn-group\"\n   :attrs {:min 1 :max 8 :step 1}}}}\n"
+                                               :k     :demo-num-segmented
+                                               :title "Segmented control for Integer adjustement"
+                                               :desc  "A numeric field can be displayed as a stepper"
+                                               :style "enum"}
+                                              {
+                                               :src   "{:name   :demo-num-stepper\n :schema {:guests s/Int}\n :action (fn [app owner result]\n (om/update! app :demo-num-stepper result))\n :opts {:guests\n  {:type \"stepper\" \n   :attrs {:min 2 :max 8 :step 2}}\n :init   {:guests 2}}}\n"
+                                               :k     :demo-num-stepper
+                                               :title "Stepper for Integer adjustement"
+                                               :desc  "A numeric field can be displayed as a stepper"
+                                               :style "numeric"}
+                                              ]}
+                                   {:title   "UX variations around lists"
+                                    :id      "lists-variations"
+                                    :content [{:k     :demo-enum
+                                               :title "Display the choices as a segmented control "
+                                               :desc  (html [:div "Display a list as a segmented control with the type option : " [:code "{:type \"btn-group\"}"]])
+                                               :src   "{:name   :demo-enum\n :schema {:language (s/enum \"Clojure\"\n                           \"ClojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:language {:type \"btn-group\"}}}"
+                                               :style "string "}
+                                              {:title "Display the choices as a liste of radio buttons"
+                                               :k     :demo-enum
+                                               :src   "{:name   :demo-enum\n :schema {:language (s/enum \"Clojure\"\n                           \"ClojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:language {:type \"radio-group\"}}}"
+                                               :desc  (html [:div "Display a list as a vertical list of radio buttons with the type option : " [:code "{:type \"radio-group\"}"]])
+                                               :style "inst"}
+                                              {:src   "{:name   :demo-enum\n :schema {:language (s/enum \"Clojure\"\n                           \"ClojureScript\"\n                           \"ClojureCLR\")}\n :action (fn [app owner result]\n               (om/update! app :demo-enum result))\n :opts {:language {:type \"radio-group-inline\"}}}"
+                                               :k     :demo-enum
+                                               :title "Display the choices as list of radio inline"
+                                               :desc  (html [:div "Display a list as an horizontal list of radio buttons with the type option : " [:code "{:type \"radio-group-inline\"}"]])
+                                               :style "numeric"}
 
-                                 ]}
-                      {:title   "UX Around Date Picker"
-                       :id      "date-options"
-                       :content [{:src   "{:name   :demo-date\n :schema {:date s/Inst}\n :action (fn [app owner result]\n   (om/update! app :demo-date result))\n :opts {:date {:type \"date\"}}}\n"
-                                  :k     :demo-date
-                                  :title "Want the native Chrome date picker ?"
-                                  :desc  "If you want to use the native chrome date input add the option :type=\"date\""
-                                  :style "inst"
-                                  }
-                                 {:src   "{:name   :demo-date-now\n :schema {:date s/Inst}\n :action (fn [app owner result]\n   (om/update! app :demo-date-now result))\n :opts {:date {:type \"now\"}}}\n"
-                                  :k     :demo-date-now
-                                  :title "Capture a precise instant"
-                                  :desc  "If you want to capture a precise instant just click "
-                                  :style "string"
-                                  }]}
+                                              ]}
+                                   {:title   "UX Around Date Picker"
+                                    :id      "date-options"
+                                    :content [{:src   "{:name   :demo-date\n :schema {:date s/Inst}\n :action (fn [app owner result]\n   (om/update! app :demo-date result))\n :opts {:date {:type \"date\"}}}\n"
+                                               :k     :demo-date
+                                               :title "Want the native Chrome date picker ?"
+                                               :desc  "If you want to use the native chrome date input add the option :type=\"date\""
+                                               :style "inst"
+                                               }
+                                              {:src   "{:name   :demo-date-now\n :schema {:date s/Inst}\n :action (fn [app owner result]\n   (om/update! app :demo-date-now result))\n :opts {:date {:type \"now\"}}}\n"
+                                               :k     :demo-date-now
+                                               :title "Capture a precise instant"
+                                               :desc  "If you want to capture a precise instant just click "
+                                               :style "string"
+                                               }]}
 
-                      {:title   "Constraint what can be typed"
-                       :id      "constraint-typing"
-                       :content [{:src   "{:name :demo-regex\n     :schema {:regex #\"^[A-Z]{0,2}[0-9]{0,12}$\"}\n     :action (fn [app owner result]\n   (om/update! app :demo-regex result))}"
-                                  :k     :demo-regex
-                                  :title "Assist the keyboard input of a String using a Regex"
-                                  :desc  "During typing, the string must conform to the regex.
+                                   {:title   "Constraint what can be typed"
+                                    :id      "constraint-typing"
+                                    :content [{:src   "{:name :demo-regex\n     :schema {:regex #\"^[A-Z]{0,2}[0-9]{0,12}$\"}\n     :action (fn [app owner result]\n   (om/update! app :demo-regex result))}"
+                                               :k     :demo-regex
+                                               :title "Assist the keyboard input of a String using a Regex"
+                                               :desc  "During typing, the string must conform to the regex.
                                                                 Because you are using regex you now have an other problem..."
-                                  :style "string"}]}
-                      {:title   "Extra Validations"
-                       :id      "extra-validations"
-                       :content [{:src   "{:name   :demo-validation-email\n :schema {:email s/Str}\n :action (fn [a o v]\n                 (om/update! a :demo-validation-email v))\n :opts {:validations\n        [[:email [:email] :bad-email]]}}"
-                                  :title "Let's see how to declare valiation rule"
-                                  :desc  (html [:p "The library " [:a "Verily"] " is used"])
-                                  :k     :demo-validation-email}]}
-                      {:title   "i18n - Help your users with information"
-                       :id      "help-users"
-                       :content [{:comp     demo-help-info
-                                  :type :i18n
-                                  :title    "Add an info tooltip"
-                                  :desc     "When you enter the field, a tooltip with an help message appears.
+                                               :style "string"}]}
+                                   {:title   "Extra Validations"
+                                    :id      "extra-validations"
+                                    :content [{:src   "{:name   :demo-validation-email\n :schema {:email s/Str}\n :action (fn [a o v]\n                 (om/update! a :demo-validation-email v))\n :opts {:validations\n        [[:email [:email] :bad-email]]}}"
+                                               :title "Let's see how to declare valiation rule"
+                                               :desc  (html [:p "The library " [:a "Verily"] " is used"])
+                                               :k     :demo-validation-email}]}
+                                   {:title   "i18n - Help your users with information"
+                                    :id      "help-users"
+                                    :content [{:comp     demo-help-info
+                                               :type     :i18n
+                                               :title    "Add an info tooltip"
+                                               :desc     "When you enter the field, a tooltip with an help message appears.
                                       The tooltip disappears when you leave the field"
-                                  :src-i18n true
-                                  :k        :demo-help-info
-                                  :style    "string"}
-                                 {:comp     demo-help-desc
-                                  :type :i18n
-                                  :title    "Add a field description"
-                                  :desc     "Adds the description below the field name"
-                                  :src-i18n true
-                                  :k        :demo-help-desc
-                                  :style    "string"}
-                                 {:comp     demo-help-placeholder
-                                  :type :i18n
-                                  :title    "Add a placeholder"
-                                  :desc     "Placeholders are often discouraged"
-                                  :src-i18n true
-                                  :k        :demo-help-placeholder
-                                  :style    "string"}]}
+                                               :src-i18n true
+                                               :k        :demo-help-info
+                                               :style    "string"}
+                                              {:comp     demo-help-desc
+                                               :type     :i18n
+                                               :title    "Add a field description"
+                                               :desc     "Adds the description below the field name"
+                                               :src-i18n true
+                                               :k        :demo-help-desc
+                                               :style    "string"}
+                                              {:comp     demo-help-placeholder
+                                               :type     :i18n
+                                               :title    "Add a placeholder"
+                                               :desc     "Placeholders are often discouraged"
+                                               :src-i18n true
+                                               :k        :demo-help-placeholder
+                                               :style    "string"}]}
 
-                      {:title   "Action's options"
-                       :id      "action-options"
-                       :content [{:src   "{:name   :action-no-reset\n :schema {:no-reset s/Str}\n :action (fn [a o v]\n               (om/update! a :action-no-reset v))\n :opts {:action {:no-reset true}}}"
-                                  :title "Keep the last posted value"
-                                  :desc  "By default the form is reset but with the option :no-reset true
-                                                   the last values are kept"
-                                  :k     :action-no-reset
-                                  :style "action-dark"}
-                                 {:src   "{:name   :action-one-shot\n :schema {:one-shot s/Str}\n :action (fn [a o v]\n       (om/update! a :action-one-shot v))\n :opts {:action {:one-shot true}}}"
-                                  :title "This action can be done only once"
-                                  :desc  "with this options {:action {:one-shot true}} the action can be triggered once
-                                                          \"Clean\" button has no action and can be hidden with CSS"
-                                  :k     :action-one-shot
-                                  :style "action"}
-                                 {:src   "{:name :action-resetable\n     :schema {:resetable s/Str}\n :action (fn [a o v]\n       (om/update! a :action-resetable v))\n :clean (fn [a o]\n       (prn \"Let's create an other item !\"))\n :opts {:action {:one-shot true}}}"
-                                  :title "Cycle between action & clean"
-                                  :desc  "with this options {:action {:one-shot true}} the action can be triggered once
-                                                         but as a clean action is provided then the form can be cleaned and resubmitted again."
-                                  :k     :action-resetable
-                                  :style "action-light"}]}
-                      {:title   "Asynchronous actions"
-                       :id      "asynchronous-actions"
-                       :content [{:type :comp
-                                  :comp  async-action
-                                  :src   (with-out-str (repl/source async-action))
-                                  :title "Action can be asynchronous"
-                                  :desc  "When the action is asynchronous the action fn has an extra parameter
-                                                    : a channel. You must use it to indicate if the result of the operation is succesful or not.
-                                                     Respectively with [:ok] or failed with [:ko error]"
-                                  :k     :async-action
-                                  :style "action"}
-                                 {:type :comp
-                                  :comp  async-action-error
-                                  :src   (with-out-str (repl/source async-action-error))
-                                  :title "Asynchronous action and errors"
-                                  :desc  "When an error occurs put [:ko] in the channel.
+                                   {:title   "Form submission options"
+                                    :id      "action-options"
+                                    :desc    (html [:div "Form submission comes in two flavors :"
+                                                    [:ul
+                                                     [:li "Continuous submission, the action button is available immediately after submission."]
+                                                     [:li "One shot : after submission the form is locked and values are read only. You have to call the clean action to submit again."]
+                                                     ]])
+                                    :content [{:title "Always submittable"
+                                               :desc  "By default, after submission, the form is ready to accept new data. This has been the case for all the demos so far"
+                                               :src   "{:name   :action-reset\n :schema {:keep-posting s/Str}\n :action (fn [a o v]\n               (om/update! a :action-reset v))\n :opts {:action {:no-reset false}}}"
+                                               :k     :action-reset
+                                               :style "action-dark"}
+                                              {:title "One shot submission"
+                                               :desc  (html [:div "The second mode is obtained using the option " [:code " {:action {:one-shot true}} "] [:div "the action can be triggered once
+                                                         but as a clean action is provided then the form can be cleaned and resubmitted again."]])
+                                               :src   "{:name :action-resetable\n :schema {:resetable s/Str}\n :action (fn [a o v]\n       (om/update! a :action-resetable v))\n :clean (fn [a o]\n       (js/alert \"cleaning action !\"))\n :opts {:action {:one-shot true}}}"
+                                               :k     :action-resetable
+                                               :style "action-light"}
+                                              {:title "Only one"
+                                               :desc  (html [:div "If you really want your form to be submitted only once, use the option :" [:code " {:action {:one-shot true}} "]
+                                                             [:div " combined with hidding The \"Clean\" button"]])
+                                               :src   "{:name   :action-one-shot\n :schema {:only-once s/Str}\n :action (fn [a o v]\n       (om/update! a :action-one-shot v))\n :opts {:action {:one-shot true}}}"
+                                               :k     :action-one-shot
+                                               :style "action"}
+                                              ]}
+                                   {:title   "Form reset options"
+                                    :id      "form-reset"
+                                    :content [{:src   "{:name   :action-reset\n :schema {:reset-field s/Str}\n :action (fn [a o v]\n               (om/update! a :action-reset v))\n :opts {:action {:no-reset false}\n :init {:reset-field \"Modify me !\"}}}"
+                                               :title "Reset to the initial values"
+                                               :desc  "By default, after submission, the form is reset to the initial value. "
+                                               :k     :action-reset
+                                               :style "action-dark"}
+                                              {:title "Keep the last submitted values"
+                                               :desc  (html [:div "If you want to keep the last submitted values, use the option: "
+                                                             [:div [:code "{opts {:action {:no-reset false}} "]]])
+                                               :src   "{:name   :action-no-reset\n :schema {:do-not-reset s/Str}\n :action (fn [a o v]\n               (om/update! a :action-no-reset v))\n :opts {:action {:no-reset true}\n :init {:do-not-reset \"Modify me !\"}}}"
+                                               :k     :action-no-reset
+                                               :style "action-dark"}]}
+                                   {:title   "Asynchronous actions"
+                                    :id      "asynchronous-actions"
+                                    :desc    (html [:div [:div "When your form submission is asynchronous :"
+                                                          [:li "Add in the option" [:code "{:opts {:action {:async true}}}"]]
+                                                          [:li "The action function gets an extra parameter : a Channel"]
+                                                          [:li "The action is complete when the channel receives the result : either [:ok] or [:ko \"Error message\"]"]]])
+                                    :content [{:type  :comp
+                                               :comp  async-action
+                                               :src   (with-out-str (repl/source async-action))
+                                               :title "Succesful asynchronous submission"
+                                               :desc  "This asynchronous action is a go block that waits one second before completing by putting [:ok] in the action channel."
+                                               :k     :async-action
+                                               :style "action"}
+                                              {:type  :comp
+                                               :comp  async-action-error
+                                               :src   (with-out-str (repl/source async-action-error))
+                                               :title "Asynchronous submission with error"
+                                               :desc  "When an error occurs put [:ko] in the channel.
                                       In this example the result will always be nil"
-                                  :k     :async-action-error
-                                  :style "action"}]}
-                      {:title "Complete forms"
-                       :id "complete-forms"
-                       :content [{:title "Booking reservation"
-                                  :desc "An hypothetic booking form"
-                                  :k "booking"
-                                  :style "string"
-                                  :src "{:name :booking\n :schema {:email  s/Str\n\t\t  :name s/Str\n\t\t  :departure  s/Inst\n\t\t  :arrival s/Inst\n\t\t  :guests s/Int}\n :action (fn [a o v]\n       (om/update! a :booking v))\n :opts {:init {:guests 1\n\t\t\t   :departure (js/Date.)}\n\t\t:order [:email :name :guests :departure :arrival ]\n\t\t:guests {:type \"stepper\"\n\t\t\t\t :attrs {:min 1 :max 6}}}}"}]}]))
+                                               :k     :async-action-error
+                                               :style "action"}]}
+                                   {:title   "Complete forms"
+                                    :id      "complete-forms"
+                                    :content [{:title "Booking reservation"
+                                               :desc  "An hypothetic booking form"
+                                               :k     "booking"
+                                               :style "string"
+                                               :src   "{:name :booking\n :schema {:email  s/Str\n\t\t  :name s/Str\n\t\t  :departure  s/Inst\n\t\t  :arrival s/Inst\n\t\t  :guests s/Int}\n :action (fn [a o v]\n       (om/update! a :booking v))\n :opts {:init {:guests 1\n\t\t\t   :departure (js/Date.)}\n\t\t:order [:email :name :guests :departure :arrival ]\n\t\t:guests {:type \"stepper\"\n\t\t\t\t :attrs {:min 1 :max 6}}}}"}]}]}))
 
 ;________________________________________________
 ;                                                |
@@ -282,13 +341,11 @@
 ;                                                |
 ;________________________________________________|
 
-
-
-
 (defn ns->cache-url
   "Locate the analyser cache for a specific ns"
-  [ns]
-  (str "js/cache/" (cljs/ns->relpath ns) ".cljs.cache.edn"))
+  [ns ext]
+  (str "js/cache/" (cljs/ns->relpath ns) ".cljs.cache." (name ext)))
+
 
 (defn get-file
   "Get a server file"
@@ -299,15 +356,29 @@
 
 (def st (cljs/empty-state))
 
-(defn with-cache-ns
+
+(defn load-cache-json!
+  [cache ns]
+  (go
+    (get-file
+     (ns->cache-url ns :json)
+     (fn [txt]
+       (let [rdr (t/reader :json)
+             ns-cache (t/read rdr txt)]
+         (cljs/load-analysis-cache! cache ns ns-cache))))))
+
+
+(defn with-cache-ns!
   "Execute a function with a compiler cache that contains a ns"
-  [cache ns cb]
-  (get-file
-    (ns->cache-url ns)
-    (fn [file]
-      (->> (read-string file)
-           (cljs/load-analysis-cache! cache ns))
-      (cb cache))))
+  ([cache ns cb ext]
+   (get-file
+     (ns->cache-url ns ext)
+     (fn [file]
+       (->> (read-string file)
+            (cljs/load-analysis-cache! cache ns))
+       (cb cache))))
+  ([cache ns cb]
+   (with-cache-ns! cache ns cb :edn)))
 
 
 #_(defn mount [id v]
@@ -326,14 +397,20 @@
      :shared i18n}))
 
 (defn eval
-  [st id forms]
+  [st app forms]
   (cljs/eval-str st forms 'ex0.core
                  {:eval    cljs/js-eval
                   :context :expr
                   :ns      'om-inputs-demo.eval-helper}
                  (fn [{:keys [value error] :as result}]
                    (if error
-                     (.log js/console (some-> result :error .-cause .-stack)))
+                     (let [cause (ex-cause error)
+                           data (ex-data cause)]
+                       (prn error)
+                       (om/update! app :error {:message (ex-message cause)
+                                               :line    (:line data)
+                                               :column (:column data)}))
+                     (om/update! app :error nil))
                    value)))
 
 
@@ -383,6 +460,13 @@
         (gobj/set "value" code)))))
 
 
+(defn error-view
+  [{:keys [message line column] :as error} owner]
+  (om/component
+    (dom/div #js {:className "alert alert-danger"}
+             (dom/div #js {}
+                      (str message " at [" line "," column "]")))))
+
 (defn editor-comp
   "Display a demo as a CodeMirror editor"
   [{:keys [id src k] :as demo} owner]
@@ -396,8 +480,9 @@
                                :className "btn btn-default btn-compile"
                                :onClick #(let [ed (om/get-state owner :cm)
                                                cache (om/get-shared owner :cache)
-                                               spec (eval cache (str id "-form") (.getValue ed))]
+                                               spec (eval cache demo (.getValue ed))]
                                           (om/set-state! owner :spec (make-input-comp spec)))} "Compile")
+               (when (:error demo) (om/build error-view (:error demo)))
                (when spec
                  (dom/div #js {}
                           (dom/h4 #js {} "Display : ")
@@ -503,7 +588,7 @@
                                                             :className "btn btn-default btn-compile"
                                                             :onClick   #(let [ed (om/get-state owner :cm)
                                                                               cache (om/get-shared owner :cache)
-                                                                              spec (eval cache (str id "-form") (.getValue ed))]
+                                                                              spec (eval cache demo  (.getValue ed))]
                                                                          (om/set-state! owner :spec (make-input-comp spec)))} "Compile"))
                                    (when spec
                                      (dom/div #js {:className "play-render"}
@@ -518,12 +603,14 @@
 
   (defn section-view
     "Display a section that contains demos."
-    [{:keys [title id] :as section} owner]
+    [{:keys [title desc id] :as section} owner]
     (reify
       om/IRenderState
       (render-state [_ state]
         (dom/section #js {:id id}
                      (dom/h2 #js {:className "section-title"} title)
+                     (when desc (dom/div #js {:className "well"}
+                                         desc))
                      (apply dom/div #js {:className "schema-types"}
                             (om/build-all card-view (:content section) {:init-state state}))))))
 
@@ -538,24 +625,6 @@
                  (om/build-all section-view app {:init-state state})))))
 
 
-(def booking '{:name :booking
-               :schema {:email  s/Str
-                        :name s/Str
-                        :departure  s/Inst
-                        :arrival s/Inst
-                        :guests s/Int
-                        :bedrooms s/Int
-                        :room-type (s/enum "house" "appartement" "room")}
-               :action (fn [a o v]
-                         (om/update! a :booking v))
-               :opts {:init {:guests 1
-                             :departure (js/Date.)}
-                      :room-type {:type "btn-group"}
-                      :bedrooms {:type "range-btn-group"
-                                 :attrs {:min 1 :max 6 }}
-                      ;:order [:email :name :guests :room-type  :departure :arrival]
-                      :guests {:type "stepper"
-                               :attrs {:min 1 :max 6}}}})
 ;________________________________________________
 ;                                                |
 ;         app component                          |
@@ -575,21 +644,21 @@
        (render-state [_ state]
          (dom/div #js {}
                   (dom/div #js {:className "main"}
-                   (om/build navigation-view app)
-                   (om/build content-view app {:init-state state}))
+                   (om/build navigation-view (:demos app))
+                   (om/build content-view (:demos app) {:init-state state}))
                   (dom/div #js {:className "main"}
-                           (om/build navigation-view app)
-                           (om/build playground {:title "Booking reservation"
-                                                 :desc  "An hypothetic booking form"
-                                                 :k     "booking"
-                                                 :style "string"
-                                                 :src   (with-out-str (pprint booking))} {:init-state state}))))))
+                           #_(om/build navigation-view app)
+                           (om/build playground (:playground app) {:init-state state}))))))
    app-state
    {:target (. js/document (getElementById "app"))
     :shared (merge i18n {:cache cache})}))
 
 
-(with-cache-ns st 'om-inputs-demo.eval-helper app)
+
+
+(go
+  (<! (load-cache-json! st 'cljs.core))
+  (with-cache-ns! st 'om-inputs-demo.eval-helper app))
 
 
 (defn on-js-reload []
