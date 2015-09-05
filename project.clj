@@ -5,48 +5,58 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.48"]
+                 [org.clojure/clojurescript "1.7.122"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [sablono "0.3.4"]
                  [org.omcljs/om "0.8.8"]
-                 [om-inputs "0.3.9-SNAPSHOT"]]
+                 [om-inputs "0.3.9"]
+                 [cljsjs/codemirror "5.6.0-0"]
+                 [com.cognitect/transit-clj "0.8.275"]
+                 [com.cognitect/transit-cljs "0.8.225"]]
 
-  :plugins [[lein-cljsbuild "1.0.5"]
-            [lein-figwheel "0.3.7"]]
+  :plugins [[lein-cljsbuild "1.1.0"]
+            [lein-figwheel "0.3.8"]]
 
   :source-paths ["src"]
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
   
   :cljsbuild {
-    :builds [{:id "dev"
-              :source-paths ["src"]
+              :builds [{:id           "dev"
+                        :source-paths ["src"]
 
-              :figwheel { :on-jsload "om-inputs-demo.core/on-js-reload" }
+                        :figwheel     {:on-jsload "om-inputs-demo.core/on-js-reload"}
 
-              :compiler {:main om-inputs-demo.core
-                         :asset-path "js/compiled/out"
-                         :output-to "resources/public/js/compiled/om_inputs_demo.js"
-                         :output-dir "resources/public/js/compiled/out"
-                         :source-map-timestamp true
-                         :foreign-libs
-                         [{:provides ["cljsjs.codemirror"]
-                           :file "resources/public/js/codemirror/codemirror.js"}
-                          {:provides ["cljsjs.codemirror.mode.clojure"]
-                           :requires ["cljsjs.codemirror"]
-                           :file "resources/public/js/codemirror/clojure.js"}
-                          {:provides ["cljsjs.codemirror.addons.closebrackets"]
-                           :requires ["cljsjs.codemirror"]
-                           :file "resources/public/js/codemirror/closebrackets.js"}
-                          {:provides ["cljsjs.codemirror.addons.matchbrackets"]
-                           :requires ["cljsjs.codemirror"]
-                           :file "resources/public/js/codemirror/matchbrackets.js"}]}}
-             {:id "min"
-              :source-paths ["src/cljs"]
-              :compiler {:output-to "resources/public/js/compiled/om_inputs_demo.js"
-                         :main om-inputs-demo.core                         
-                         :optimizations :advanced
-                         :pretty-print false}}]}
+                        :compiler     {:main                 om-inputs-demo.core
+                                       :asset-path           "js/compiled/out"
+                                       :output-to            "resources/public/js/compiled/om_inputs_demo.js"
+                                       :output-dir           "resources/public/js/compiled/out"
+                                       :source-map-timestamp true
+                                       :dump-core            false
+                                       :foreign-libs
+                                                             [{:provides ["cljsjs.codemirror.addons.closebrackets"]
+                                                               :requires ["cljsjs.codemirror"]
+                                                               :file     "resources/public/js/codemirror/closebrackets.js"}
+                                                              {:provides ["cljsjs.codemirror.addons.matchbrackets"]
+                                                               :requires ["cljsjs.codemirror"]
+                                                               :file     "resources/public/js/codemirror/matchbrackets.js"}]}}
+                       {:id           "min"
+                        :source-paths ["src/cljs"]
+                        :compiler     {:optimizations :simple
+                                       :pretty-print false
+                                       :dump-core false
+                                       :static-fns true
+                                       :optimize-constants true
+                                       :verbose true
+                                       :output-to          "resources/public/js/compiled/om_inputs_demo.js"
+                                       :output-dir           "resources/public/js/compiled/out"
+                                       :asset-path         "js/compiled/out"
+                                       :foreign-libs       [{:provides ["cljsjs.codemirror.addons.closebrackets"]
+                                                             :requires ["cljsjs.codemirror"]
+                                                             :file     "resources/public/js/codemirror/closebrackets.js"}
+                                                            {:provides ["cljsjs.codemirror.addons.matchbrackets"]
+                                                             :requires ["cljsjs.codemirror"]
+                                                             :file     "resources/public/js/codemirror/matchbrackets.js"}]}}]}
 
   :figwheel {
              ;; :http-server-root "public" ;; default and assumes "resources" 
