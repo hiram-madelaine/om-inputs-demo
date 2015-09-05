@@ -1,4 +1,5 @@
 
+
 @color-primary-0: #617E95;	/* Main Primary color */
 @color-primary-1: #A2B2BE;
 @color-primary-2: #7D94A5;
@@ -22,6 +23,14 @@
 @color-complement-2: #FFE3BE;
 @color-complement-3: darken(#F2BE22,10%);//darken(rgb(231,	166,	54	),5%);//#CEA268;
 @color-complement-4: #B2813F;
+
+
+
+
+
+body {
+    background-color: darken(darkgrey,8%);
+}
 
 .schema-types {
 
@@ -273,6 +282,19 @@ button.disabled {
 //________________________________________________|
 
 
+.header {
+    border-radius: 6px;
+    border: 1px solid lightgrey;
+    margin: 5px;
+    padding: 15px;
+    background-color: #eee;
+
+    &> h2 {
+        margin-top: 0px;
+        padding: 0px;
+    }
+}
+
 .main {
     display: flex;
     padding: 2rem;
@@ -281,9 +303,9 @@ button.disabled {
 .navigation {
     border-radius: 6px;
     padding: 5px;
-    background-color: #aab;
+    background-color: #bbb;
     min-width: 282px;
-    
+
 }
 
 .content {
@@ -292,7 +314,6 @@ button.disabled {
 }
 
 .index {
-
     position: fixed;
     top: 30px;
 }
@@ -339,10 +360,18 @@ section {
 
 .play-source {
     margin: 4px;
-    flex: 1.2;
+    flex: 0 0 auto;
 }
 
 .play-render {
     margin: 4px;
-    flex: 1;
+    flex: 1 0 auto;
+}
+
+img.logo-small {
+    width: 60px;
+    height: 60px;
+    position: fixed;
+    bottom: 25px;
+    left: 25px;
 }
