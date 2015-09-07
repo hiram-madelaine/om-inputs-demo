@@ -157,7 +157,7 @@
                                                          [:div "Need an Integer ? use the schema : " [:code "s/Int"]]
                                                          [:div "You'll only be able to type numeric characters"]])
                                            :src   "{:name   :demo-int\n :schema {:age s/Int}\n :action (fn [app owner result]\n     (om/update! app :demo-int result))}"
-                                           :style "numeric"}
+                                           :style "blue"}
                                           {:k     :demo-inst
                                            :title "Date"
                                            :desc  (html [:div
@@ -178,7 +178,7 @@
                                            :desc  (html [:div
                                                          [:div "Need a boolean ? Use the schema : " [:code "s/Bool"]]
                                                          [:div "A boolean is by default represented with a checkbox"]])
-                                           :style "bool"}]}
+                                           :style "red"}]}
                                {:title   "Optional data"
                                 :id      "optional-data"
                                 :content [{:src   "{:name   :demo-optional-field\n :schema {:email s/Str\n          (s/optional-key :name) s/Str}\n :action (fn [a o v]\n    (om/update! a :demo-optional-field v))}"
@@ -236,7 +236,6 @@
                                            :desc  "If you want to capture a precise instant just click "
                                            :style "string"
                                            }]}
-
                                {:title   "Constraint what can be typed"
                                 :id      "constraint-typing"
                                 :content [{:src   "{:name :demo-regex\n     :schema {:regex #\"^[A-Z]{0,2}[0-9]{0,12}$\"}\n     :action (fn [app owner result]\n   (om/update! app :demo-regex result))}"
@@ -301,13 +300,13 @@
                                                          but as a clean action is provided then the form can be cleaned and resubmitted again."]])
                                            :src   "{:name :action-resetable\n :schema {:resetable s/Str}\n :action (fn [a o v]\n       (om/update! a :action-resetable v))\n :clean (fn [a o]\n       (js/alert \"cleaning action !\"))\n :opts {:action {:one-shot true}}}"
                                            :k     :action-resetable
-                                           :style "action"}
+                                           :style "green"}
                                           {:title "Only once"
                                            :desc  (html [:div "If you really want your form to be submitted only once, use the option :" [:code " {:action {:one-shot true}} "]
                                                          [:div " combined with hidding The \"Clean\" button"]])
                                            :src   "{:name   :action-one-shot\n :schema {:only-once s/Str}\n :action (fn [a o v]\n       (om/update! a :action-one-shot v))\n :opts {:action {:one-shot true}}}"
                                            :k     :action-one-shot
-                                           :style "action-light"}
+                                           :style "yellow"}
                                           ]}
                                {:title   "Form reset options"
                                 :id      "form-reset"
@@ -325,7 +324,7 @@
                                {:title   "Asynchronous actions"
                                 :id      "asynchronous-actions"
                                 :desc    (html [:div [:div "When your form submission is asynchronous :"
-                                                      [:li "Add in the option" [:code "{:opts {:action {:async true}}}"]]
+                                                      [:li "Add in the option: " [:code "{:opts {:action {:async true}}}"]]
                                                       [:li "The action function gets an extra parameter : a Channel"]
                                                       [:li "The action is complete when the channel receives the result : either [:ok] or [:ko \"Error message\"]"]]])
                                 :content [{:type  :comp
@@ -586,7 +585,9 @@
                                                                     :onClick   #(let [ed (om/get-state owner :cm)
                                                                                       cache (om/get-shared owner :cache)
                                                                                       spec (eval cache demo  (.getValue ed))]
-                                                                                 (om/set-state! owner :spec (make-input-comp spec)))} "Compile"))
+                                                                                 (om/set-state! owner :spec (make-input-comp spec)))} "Compile")
+                                                   (when (:error demo) (om/build error-view (:error demo))))
+
                                           (when spec
                                             (dom/div #js {:className "play-render"}
                                                      (om/build spec demo {:state state})
@@ -635,7 +636,7 @@
       (render-state [_ state]
         (dom/section #js {:id id}
                      (dom/h2 #js {:className "section-title"} title)
-                     (when desc (dom/div #js {:className "well"}
+                     (when desc (dom/div #js {:className "section-desc"}
                                          desc))
                      (apply dom/div #js {:className "schema-types"}
                             (om/build-all demo-view (:content section) {:init-state state}))))))
@@ -644,7 +645,7 @@
   [head owner]
   (om/component
     (dom/div #js {:className "content"}
-             (dom/div #js {:className "well"} head))))
+             (dom/div #js {:className "header"} head))))
 
 
 (defn content-view
