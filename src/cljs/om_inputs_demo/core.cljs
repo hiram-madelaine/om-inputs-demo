@@ -25,6 +25,71 @@
 
 ;________________________________________________
 ;                                                |
+;        Compilation                             |
+;                                                |
+;________________________________________________|
+
+(defn ns->cache-url
+  "Locate the analyser cache for a specific ns"
+  [ns ext]
+  (str "js/cache/" (cljs/ns->relpath ns) ".cljs.cache." (name ext)))
+
+
+(defn get-file
+  "Get a server file"
+  [url cb]
+  (.send XhrIo url
+         (fn [e]
+           (cb (.. e -target getResponseText)))))
+
+(def st (cljs/empty-state))
+
+
+(defn load-cache-json!
+  [cache ns]
+  (go
+    (get-file
+      (ns->cache-url ns :json)
+      (fn [txt]
+        (let [rdr (t/reader :json)
+              ns-cache (t/read rdr txt)]
+          (cljs/load-analysis-cache! cache ns ns-cache))))))
+
+
+(defn with-cache-ns!
+  "Execute a function with a compiler cache that contains a ns"
+  ([cache ns cb ext]
+   (get-file
+     (ns->cache-url ns ext)
+     (fn [file]
+       (->> (read-string file)
+            (cljs/load-analysis-cache! cache ns))
+       (cb cache))))
+  ([cache ns cb]
+   (with-cache-ns! cache ns cb :edn)))
+
+
+(defn eval
+  [st app forms]
+  (cljs/eval-str st forms 'ex0.core
+                 {:eval    cljs/js-eval
+                  :context :expr
+                  :ns      'om-inputs-demo.eval-helper}
+                 (fn [{:keys [value error] :as result}]
+                   (if error
+                     (let [cause (ex-cause error)
+                           data (ex-data cause)]
+                       (prn error)
+                       (om/update! app :error {:message (ex-message cause)
+                                               :line    (:line data)
+                                               :column (:column data)}))
+                     (om/update! app :error nil))
+                   value)))
+
+
+
+;________________________________________________
+;                                                |
 ;         Asyn Actions                           |
 ;                                                |
 ;________________________________________________|
@@ -61,6 +126,13 @@
 ;________________________________________________|
 
 
+(def demo-help-field
+  (make-input-comp
+    :demo-help-field
+    {:field-1 s/Str}
+    (fn [a o v]
+      (om/update! a :demo-help-field v))))
+
 (def demo-help-title
   (make-input-comp
     :demo-help-title
@@ -91,21 +163,15 @@
       (om/update! a :demo-help-placeholder v))))
 
 
-(def i18n {:i18n {"fr" {:errors                {:mandatory "Cette donnée est obligatoire"
-                                                :bad-email "Invalid email"
+(def i18n {:i18n {"en" {:errors                {:mandatory    "This information is mandatory"
+                                                :bad-email    "Invalid email"
                                                 :bad-password "Your passwords are not identical"}
-                        :demo-help-title       {:title "Regarde m'man: un titre !"}
+                        :demo-help-field       {:field-1 {:label "My i18n Label"}}
+                        :demo-help-title       {:title "The title of your form"}
                         :demo-help-info        {:email {:info "Your email will only be used to send your travel details"}}
                         :demo-help-desc        {:email {:desc "We won't spam you, ever"}}
-                        :demo-help-placeholder {:email {:ph   "you.email@org"}}}
-                  "en" {:errors         {:mandatory "This information is mandatory"
-                                         :bad-email "Invalid email"
-                                         :bad-password "Your passwords are not identical"}
-                        :demo-help-title       {:title "Look ma, a title !"}
-                        :demo-help-info        {:email {:info "Your email will only be used to send your travel details"}}
-                        :demo-help-desc        {:email {:desc "We won't spam you, ever"}}
-                        :demo-help-placeholder {:email {:ph   "you.email@org"}}
-                        :booking {:title "Your information"} }}})
+                        :demo-help-placeholder {:email {:ph "you.email@org"}}
+                        :booking               {:title "Your information"}}}})
 (def booking '{:name   :booking
                :schema {:email     s/Str
                         :name      s/Str
@@ -133,25 +199,24 @@
                                      [:div {:class "header-help"}
                                       [:h5 "To build a form, om-inputs provides one function : "]
                                       [:code "make-input-comp"]
-                                      [:h5 "It takes a form specification and produces an Om component: "]
+                                      [:h5 "It takes a form specification and produces an Om component : "]
                                       [:code "(def om-component (make-input-comp spec))"]]
                                      [:div {:class "header-help"}
-                                      [:h5 "The form specification is a map that contains:"]
+                                      [:h5 "The form specification is a map that contains :"]
                                       [:ul
-                                       [:li "The name of the component as a Keyword"]
-                                       [:li "A prismatic Schema describing the data"]
-                                       [:li "An action function taking 3 parameters: "
-                                        [:div "the app cursor, the owner and the map result"]]
-                                       [:li "Options to customize the component"]]]
+                                       [:li "the name of the component as a Keyword ;"]
+                                       [:li "a prismatic Schema describing the data ;"]
+                                       [:li "an action function taking 3 parameters : "
+                                        [:div "the app cursor, the owner and the map result ;"]]
+                                       [:li "Options to customize the component."]]]
                                      [:div {:class "header-help"}
                                       [:h5 "Each feature is presented in a demo card"]
                                       [:div "Each card contains a form specification that you can edit and compile on the fly. "]
                                       [:ul
-                                       [:li "Click on \"Compile\""]
+                                       [:li "Click on \"Compile\"."]
                                        [:li "The form is rendered in the display section."]
-                                       [:li "The result section shows the app cursor value"]
-                                       [:li "Feel free to modify the form's specification and recompile."]]]]
-                                    )
+                                       [:li "The result section shows the app cursor value."]
+                                       [:li "Feel free to modify the form's specification and recompile."]]]])
                       :demos  [{:title   "Basic types: The usual suspects"
                                 :desc    (html [:div "You describe your form using the leaf schemas: " [:code " s/Str, s/Num, s/Int, s/Bool, s/Inst"]
                                                 [:div "in the demo sources  Prismatic/schema is required with the prefix: s"]])
@@ -248,14 +313,15 @@
                                 :content [{:src   "{:name   :demo-date\n :schema {:date s/Inst}\n :action (fn [app owner result]\n   (om/update! app :demo-date result))\n :opts {:date {:type \"date\"}}}\n"
                                            :k     :demo-date
                                            :title "Want the native Chrome date picker ?"
-                                           :desc  "If you want to use the native chrome date input add the option :type=\"date\""
-                                           :style "inst"
+                                           :desc  (html [:div "If you want to use the native chrome date input add the option " [:code "{:type=\"date\"}"]]
+                                                        [:div "Note that it won't display the date picker if you are not in Chrome"])
+                                           :style "blue"
                                            }
                                           {:src   "{:name   :demo-date-now\n :schema {:date s/Inst}\n :action (fn [app owner result]\n   (om/update! app :demo-date-now result))\n :opts {:date {:type \"now\"}}}\n"
                                            :k     :demo-date-now
                                            :title "Capture a precise instant"
                                            :desc  "If you want to capture a precise instant just click "
-                                           :style "string"
+                                           :style "red"
                                            }]}
                                {:title   "Constraint what can be typed"
                                 :id      "constraint-typing"
@@ -280,27 +346,29 @@
                                            :k     :demo-validation-email
                                            :style "blue"}
                                           {:title "Inter fields validation"
-                                           :desc "Two fields must be identical"
-                                           :k :demo-validation-passwords
-                                           :src "{:name   :demo-validation-password\n :schema {:password s/Str\n\t\t  :confirm s/Str}\n :action (fn [a o v] (om/update! a :demo-validation-password v))\n :opts {:order [:password :confirm]\n\t\t:password {:attrs {:type \"password\"}}\n\t\t:confirm {:attrs {:type \"password\"}}\n\t\t:validations\n        [[:equal [:confirm :password] :bad-password]]}}"
+                                           :desc  "Two fields must be identical"
+                                           :k     :demo-validation-passwords
+                                           :src   "{:name   :demo-validation-password\n :schema {:password s/Str\n\t\t  :confirm s/Str}\n :action (fn [a o v] (om/update! a :demo-validation-password v))\n :opts {:order [:password :confirm]\n\t\t:password {:attrs {:type \"password\"}}\n\t\t:confirm {:attrs {:type \"password\"}}\n\t\t:validations\n        [[:equal [:confirm :password] :bad-password]]}}"
                                            :style "yellow"}]}
                                {:title   "i18n - Help your users with information"
+                                :desc    (html [:h5 "It is possible to provide the labels and error messages in multiple languages. Just put a map in the shared data."]
+                                               [:textarea {:id "i18n-demo"} (with-out-str (pprint i18n))])
+                                :cm      "i18n-demo"
                                 :id      "help-users"
-                                :content [{:comp     demo-help-info
-                                           :type     :i18n
-                                           :title    "Add an info tooltip"
-                                           :desc     "When you enter the field, a tooltip with an help message appears.
-                                      The tooltip disappears when you leave the field"
-                                           :src-i18n true
-                                           :k        :demo-help-info
-                                           :style    "string"}
-                                          {:comp     demo-help-title
-                                           :desc     "The title "
+                                :content [{:comp     demo-help-title
+                                           :desc     "You can add a title to you form. "
                                            :type     :i18n
                                            :title    "Add a title to your form"
                                            :src-i18n true
                                            :k        :demo-help-title
                                            :style    "red"}
+                                          {:comp     demo-help-field
+                                           :k        :demo-help-field
+                                           :type     :i18n
+                                           :title    "Change the label of your fields"
+                                           :desc     "You can provide the label for you fields in several languages"
+                                           :src-i18n true
+                                           :style    "green"}
                                           {:comp     demo-help-desc
                                            :type     :i18n
                                            :title    "Add a field description"
@@ -308,6 +376,13 @@
                                            :src-i18n true
                                            :k        :demo-help-desc
                                            :style    "inst"}
+                                          {:comp     demo-help-info
+                                           :type     :i18n
+                                           :title    "Add an info tooltip"
+                                           :desc     "When you enter the field, a tooltip with an help message appears. The tooltip disappears when you leave the field"
+                                           :src-i18n true
+                                           :k        :demo-help-info
+                                           :style    "string"}
                                           {:comp     demo-help-placeholder
                                            :type     :i18n
                                            :title    "Add a placeholder"
@@ -385,69 +460,6 @@
                                            :style "blue"
                                            :src   "{:name :booking,\n :schema\n {:email s/Str,\n  :name s/Str,\n  :departure s/Inst,\n  :arrival s/Inst,\n  :guests s/Int,\n  :bedrooms s/Int,\n  :room-type (s/enum \"house\" \"apartment\" \"room\")},\n :action (fn [a o v] \n\t\t   (om/update! a :booking v)),\n :opts\n {:init {:guests 1, :departure (js/Date.)},\n  :validations [[:email [:email] :bad-email]],\n  :room-type {:type \"btn-group\"},\n  :bedrooms {:type \"range-btn-group\", \n\t\t\t :attrs {:min 1, :max 6}},\n  :guests {:type \"stepper\", \n\t\t   :attrs {:min 1, :max 6}}}}" #_(with-out-str (pprint booking))}]}]}))
 
-;________________________________________________
-;                                                |
-;        Compilation                             |
-;                                                |
-;________________________________________________|
-
-(defn ns->cache-url
-  "Locate the analyser cache for a specific ns"
-  [ns ext]
-  (str "js/cache/" (cljs/ns->relpath ns) ".cljs.cache." (name ext)))
-
-
-(defn get-file
-  "Get a server file"
-  [url cb]
-  (.send XhrIo url
-         (fn [e]
-           (cb (.. e -target getResponseText)))))
-
-(def st (cljs/empty-state))
-
-
-(defn load-cache-json!
-  [cache ns]
-  (go
-    (get-file
-     (ns->cache-url ns :json)
-     (fn [txt]
-       (let [rdr (t/reader :json)
-             ns-cache (t/read rdr txt)]
-         (cljs/load-analysis-cache! cache ns ns-cache))))))
-
-
-(defn with-cache-ns!
-  "Execute a function with a compiler cache that contains a ns"
-  ([cache ns cb ext]
-   (get-file
-     (ns->cache-url ns ext)
-     (fn [file]
-       (->> (read-string file)
-            (cljs/load-analysis-cache! cache ns))
-       (cb cache))))
-  ([cache ns cb]
-   (with-cache-ns! cache ns cb :edn)))
-
-
-(defn eval
-  [st app forms]
-  (cljs/eval-str st forms 'ex0.core
-                 {:eval    cljs/js-eval
-                  :context :expr
-                  :ns      'om-inputs-demo.eval-helper}
-                 (fn [{:keys [value error] :as result}]
-                   (if error
-                     (let [cause (ex-cause error)
-                           data (ex-data cause)]
-                       (prn error)
-                       (om/update! app :error {:message (ex-message cause)
-                                               :line    (:line data)
-                                               :column (:column data)}))
-                     (om/update! app :error nil))
-                   value)))
-
 
 ;________________________________________________
 ;                                                |
@@ -479,7 +491,6 @@
 
 (def cm-opts
   #js {:fontSize 8
-       ;:theme "zenburn"
        :lineNumbers true
        :matchBrackets true
        :autoCloseBrackets true
@@ -496,6 +507,12 @@
         (gobj/set "value" code)))))
 
 
+;________________________________________________
+;                                                |
+;         Content components                     |
+;                                                |
+;________________________________________________|
+
 (defn error-view
   [{:keys [message line column] :as error} owner]
   (om/component
@@ -510,21 +527,21 @@
     om/IRenderState
     (render-state [_ {:keys [spec] :as  state}]
       (dom/div #js {}
-               (dom/h4 #js {} "Source : ")
+               (dom/h5 #js {} "Source : ")
                (dom/textarea #js {:id (str id "-ed")})
                (dom/button #js {:type "button"
-                               :className "btn btn-default btn-compile"
-                               :onClick #(let [ed (om/get-state owner :cm)
-                                               cache (om/get-shared owner :cache)
-                                               spec (eval cache demo (.getValue ed))]
-                                          (om/set-state! owner :spec (make-input-comp spec)))} "Compile")
+                                :className "btn btn-default btn-compile"
+                                :onClick #(let [ed (om/get-state owner :cm)
+                                                cache (om/get-shared owner :cache)
+                                                spec (eval cache demo (.getValue ed))]
+                                           (om/set-state! owner :spec (make-input-comp spec)))} "Compile")
                (when (:error demo) (om/build error-view (:error demo)))
                (when spec
                  (dom/div #js {}
-                          (dom/h4 #js {} "Display : ")
+                          (dom/h5 #js {} "Form : ")
                           (om/build spec demo {:state state})
                           (dom/div #js {:className ""}
-                                   (dom/h4 #js {} "Result : ")
+                                   (dom/h6 #js {} "Result : ")
                                    (dom/pre #js {}
                                             (dom/code #js {:className "clojure"}
                                                       (print-str (get demo k)))))))))
@@ -535,16 +552,10 @@
 
 
 
-;________________________________________________
-;                                                |
-;         Content components                     |
-;                                                |
-;________________________________________________|
-
 
   (defn i18n-as-str
     [owner k]
-    (with-out-str (pprint (get-in (om/get-shared owner) [:i18n "fr" k]))))
+    (with-out-str (pprint (get-in (om/get-shared owner) [:i18n "en" k]))))
 
 
 
@@ -552,11 +563,11 @@
   [{:keys [id k comp] :as demo} owner]
   (om/component
     (dom/div #js {}
-             (dom/h4 #js {} "i18n : ")
+             (dom/h5 #js {} "i18n : ")
              (dom/pre #js {}
               (dom/code #js {:className "clojure"}
                         (i18n-as-str owner k)))
-             (dom/h4 #js {} "Display : ")
+             (dom/h5 #js {} "Form : ")
              (dom/div #js {:id (str id "-form")})
              (om/build comp demo {:state (om/get-state owner)}))))
 
@@ -567,14 +578,14 @@
     om/IRenderState
     (render-state [_ state]
       (dom/div #js {}
-               (dom/h4 #js {} "Source : ")
+               (dom/h5 #js {} "Source : ")
                (dom/pre #js {}
                         (dom/code #js {:className "clojure"}
                                   src))
-               (dom/h4 #js {} "Display : ")
+               (dom/h5 #js {} "Form : ")
                (om/build comp demo {:state (om/get-state owner)})
                (dom/div #js {:className ""}
-                        (dom/h4 #js {} "Result : ")
+                        (dom/h5 #js {} "Result : ")
                         (dom/pre #js {}
                                  (dom/code #js {:className "clojure"}
                                            (print-str (get demo k)))))))))
@@ -597,7 +608,7 @@
                                           (dom/div #js {:className "play-source"}
                                                    (when desc (dom/div #js {:className "well"}
                                                                        desc))
-                                                   (dom/h4 #js {} "Source : ")
+                                                   (dom/h5 #js {} "Source : ")
                                                    (dom/textarea #js {:id (str id "-ed")})
                                                    (dom/button #js {:type      "button"
                                                                     :className "btn btn-default btn-compile"
@@ -649,12 +660,17 @@
 
   (defn section-view
     "Display a section that contains demos."
-    [{:keys [title desc id] :as section} owner]
+    [{:keys [title desc id cm] :as section} owner]
     (reify
+      om/IDidMount
+      (did-mount [_]
+        (when cm
+          (prn cm)
+          (js/CodeMirror.fromTextArea (gdom/getElement cm) #js {:readOnly true})))
       om/IRenderState
       (render-state [_ state]
         (dom/section #js {:id id}
-                     (dom/h2 #js {:className "section-title"} title)
+                     (dom/h3 #js {:className "section-title"} title)
                      (when desc (dom/div #js {:className "section-desc"}
                                          desc))
                      (apply dom/div #js {:className "schema-types"}

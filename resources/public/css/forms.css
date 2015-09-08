@@ -1,13 +1,6 @@
 /* some style */
 
 
-body {
-
-    font-family: "Myriad Pro",Arial,Helvetica,Tahoma,sans-serif;
-    color: #727272;
-}
-
-
 .optional::after {
   content : " (Option)";
   color : grey;
