@@ -123,20 +123,31 @@
                         :guests      {:type  "stepper"
                                       :attrs {:min 1 :max 6}}}})
 
-(def app-state (atom {:header (html [:h2 "Welcome to the " [:a {:href "https://github.com/hiram-madelaine/om-inputs"} "om-inputs"] " interactive tutorial !"]
+(def app-state (atom {:header (html [:h2 "Welcome to the  interactive tutorial of " [:a {:href "https://github.com/hiram-madelaine/om-inputs"} "om-inputs"] " !"]
                                     [:h5 "In this tutorial, you will discover all the functionalities of om-inputs an " [:a {:href "https://github.com/omcljs/om"} "Om"] " library to generate forms from " [:a {:href "https://github.com/Prismatic/schema"} "Prismatic/schema."]]
                                     [:section "Each feature is presented in a card, each card contains a form specification that you can edit and compile on the fly.
                                  The resulting form is rendered in the Display section"]
-                                    [:h5 "To create a form you need:"]
-                                    [:ul
-                                     [:li "The name of the component as a Keyword"]
-                                     [:li "A prismatic Schema describing the data (Prismatic/schema is required with the prefix s)"]
-                                     [:li "An action function taking 3 parameters: the app cursor, the owner and the map result"]]
-                                    [:div "To use an example, click on \"Compile\"; The form will appear in the display section.
-                                       The result section shows the app cursor value"]
-                                    [:div "Feel free to modify the form's specification and recompile."])
+                                    [:div {:id "help"}
+                                     [:div {:class "header-help"}
+                                      [:h5 "To create a form you need:"]
+                                      [:ul
+                                       [:li "The name of the component as a Keyword"]
+                                       [:li "A prismatic Schema describing the data"]
+                                       [:li "An action function taking 3 parameters: "
+                                        [:div "the app cursor, the owner and the map result"]]]]
+                                     [:div {:class "header-help"}
+                                      [:h5 "om-inputs provides one function :"]
+                                      [:code "make-input-comp"]
+                                      [:div "in the demo sources  Prismatic/schema is required with the prefix s"]]
+                                     [:div {:class "header-help"}
+                                      [:div "To use an example :"
+                                       [:ul " click on \"Compile\"; "]
+                                       [:ul "The form will appear in the display section."]
+                                       [:ul " The result section shows the app cursor value"]]
+                                      [:div "Feel free to modify the form's specification and recompile."]]]
+                                    )
                       :demos  [{:title   "Basic types: The usual suspects"
-                                :desc "You can describe your form using the leaf schemas : s/Str s/Num s/Int s/Bool s/Inst"
+                                :desc    (html [:div "You describe your form using the leaf schemas: " [:code " s/Str, s/Num, s/Int, s/Bool, s/Inst"]])
                                 :id      "usual-suspects"
                                 :content [{:k     :demo-1
                                            :title "String"
@@ -250,7 +261,7 @@
                                            :title "Let's see how to declare valiation rule"
                                            :desc  (html [:p "The library " [:a "Verily"] " is used"])
                                            :k     :demo-validation-email
-                                           :style "string"}]}
+                                           :style "blue"}]}
                                {:title   "i18n - Help your users with information"
                                 :id      "help-users"
                                 :content [{:comp     demo-help-info
@@ -267,7 +278,7 @@
                                            :title    "Add a title to your form"
                                            :src-i18n true
                                            :k        :demo-help-title
-                                           :style    "enum"}
+                                           :style    "red"}
                                           {:comp     demo-help-desc
                                            :type     :i18n
                                            :title    "Add a field description"
@@ -314,34 +325,34 @@
                                            :title "Reset to the initial values"
                                            :desc  "By default, after submission, the form is reset to the initial value. "
                                            :k     :action-reset
-                                           :style "action-dark"}
+                                           :style "red"}
                                           {:title "Keep the last submitted values"
                                            :desc  (html [:div "If you want to keep the last submitted values, use the option: "
                                                          [:div [:code "{opts {:action {:no-reset false}} "]]])
                                            :src   "{:name   :action-no-reset\n :schema {:do-not-reset s/Str}\n :action (fn [a o v]\n               (om/update! a :action-no-reset v))\n :opts {:action {:no-reset true}\n :init {:do-not-reset \"Modify me !\"}}}"
                                            :k     :action-no-reset
-                                           :style "action-dark"}]}
+                                           :style "string"}]}
                                {:title   "Asynchronous actions"
                                 :id      "asynchronous-actions"
                                 :desc    (html [:div [:div "When your form submission is asynchronous :"
-                                                      [:li "Add in the option: " [:code "{:opts {:action {:async true}}}"]]
+                                                      [:li "Add the option: " [:code "{:opts {:action {:async true}}}"]]
                                                       [:li "The action function gets an extra parameter : a Channel"]
-                                                      [:li "The action is complete when the channel receives the result : either [:ok] or [:ko \"Error message\"]"]]])
+                                                      [:li (html [:div "The action completes when the channel receives the result : either " [:code "[:ok]"] " or " [:code "[:ko \"Error message\"]"]])]]])
                                 :content [{:type  :comp
                                            :comp  async-action
                                            :src   (with-out-str (repl/source async-action))
                                            :title "Succesful asynchronous submission"
-                                           :desc  "This asynchronous action is a go block that waits one second before completing by putting [:ok] in the action channel."
+                                           :desc  (html [:div "In this example The asynchronous action is a go block that waits one second before completing by putting " [:code "[:ok]"] " in the action channel."])
                                            :k     :async-action
-                                           :style "action"}
+                                           :style "green"}
                                           {:type  :comp
                                            :comp  async-action-error
                                            :src   (with-out-str (repl/source async-action-error))
                                            :title "Asynchronous submission with error"
-                                           :desc  "When an error occurs put [:ko] in the channel.
-                                      In this example the result will always be nil"
+                                           :desc  (html [:div "When an error occurs put " [:code "[:ko]"] " in the channel.
+                                      In this example the result will always be nil"])
                                            :k     :async-action-error
-                                           :style "action"}]}
+                                           :style "yellow"}]}
                                {:title   "Playground"
                                 :id      "complete-forms"
                                 :content [{:title "Booking reservation"
@@ -644,8 +655,7 @@
 (defn header
   [head owner]
   (om/component
-    (dom/div #js {:className "content"}
-             (dom/div #js {:className "header"} head))))
+    (dom/div #js {:className "header"} head)))
 
 
 (defn content-view
@@ -655,9 +665,9 @@
       om/IRenderState
       (render-state
         [_ state]
-        (dom/div #js {}
+        (dom/div #js {:className "content"}
                  (om/build header (:header app))
-                 (apply dom/div #js {:className "content"}
+                 (apply dom/div #js {}
                         (om/build-all section-view (:demos app) {:init-state state}))))))
 
 

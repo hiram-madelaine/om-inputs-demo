@@ -230,10 +230,12 @@ button.disabled {
 //________________________________________________|
 
 
-@body-color: lighten(black,20%);
-@header-bck-color: lighten( @body-color,7%);
+@body-color: lighten(black,17%);
+@header-bck-color: lighten( @body-color,5%);
 @section-header-bck-color: lighten( @body-color,9%);
-@section-bck-color: lighten( @body-color,15%);
+@section-desc-bck-color: lighten( @body-color,13%);
+@section-bck-color: lighten( @body-color,16%);
+@index-bck-color: lighten(@body-color,2);
 
 body {
     background-color: @body-color;
@@ -241,7 +243,7 @@ body {
 
 .main {
     display: flex;
-    padding: 2rem;
+    padding: 10px;;
 }
 
 .frame {
@@ -255,6 +257,18 @@ body {
     background-color: @header-bck-color;
 }
 
+#help {
+    display: flex;
+    flex-wrap: wrap;
+    }
+
+
+.header-help {
+    .frame;
+    margin: 3px;
+    flex: 1 0 330px;
+    background-color: @section-desc-bck-color;
+}
 
 .navigation {
     .frame;
@@ -282,12 +296,12 @@ body {
 }
 
 .list-group-item {
-    background-color: @section-bck-color;
-    border: 1px solid lighten(@section-bck-color,10%);
+    background-color: @index-bck-color;//@section-bck-color;
+    border: 1px solid lighten(@index-bck-color,10%);
 }
 
 a.list-group-item {
-        color: lightgrey;
+        color: lighten(grey,10%);
         &:hover {
             background-color: darken(@section-bck-color,10%);
             color: contrast(darken(@section-bck-color,10%));
@@ -303,10 +317,10 @@ a.list-group-item {
 .section-desc {
     .frame;
     margin-bottom: 5px;
-    background-color: @section-bck-color;
+    background-color: @section-desc-bck-color;
     code {
-
-        background-color: lighten(@section-bck-color,40%);
+        color: black;
+        background-color: lighten(@section-bck-color,15%);
     }
 }
 
@@ -344,12 +358,12 @@ section {
 
 .play-source {
     margin: 4px;
-    flex: 0 0 auto;
+    flex: 1.2;
 }
 
 .play-render {
     margin: 4px;
-    flex: 1 0 auto;
+    flex: 1;
 }
 
 img.logo-small {
