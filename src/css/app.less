@@ -143,7 +143,7 @@ button.disabled {
         background-color: @color;
         padding: 10px 5px 5px 15px;
         .add-top-reflect(@color);
-        color: contrast(@color);
+        color: contrast(@color,#fff, #555);
     }
 
 
@@ -231,6 +231,7 @@ button.disabled {
 
 
 @body-color: lighten(black,17%);
+@font-color: lighten(@body-color, 50%);
 @header-bck-color: lighten( @body-color,5%);
 @section-header-bck-color: lighten( @body-color,9%);
 @section-desc-bck-color: lighten( @body-color,13%);
@@ -249,7 +250,7 @@ body {
 .frame {
     border-radius: 6px;
     padding: 10px;
-    color: lightgrey;
+    color: @font-color;
 }
 
 .header {
@@ -260,15 +261,9 @@ body {
 #help {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
     }
 
-
-.header-help {
-    .frame;
-    margin: 3px;
-    flex: 1 0 330px;
-    background-color: @section-desc-bck-color;
-}
 
 .navigation {
     .frame;
@@ -319,10 +314,20 @@ a.list-group-item {
     margin-bottom: 5px;
     background-color: @section-desc-bck-color;
     code {
-        color: black;
-        background-color: lighten(@section-bck-color,15%);
+        color: desaturate(@yellow-google,25%);
+        background-color: lighten(@section-bck-color,7%);
     }
 }
+
+
+
+.header-help {
+    .section-desc;
+    margin: 3px;
+    flex: 1 0 330px;
+    background-color: @section-desc-bck-color;
+}
+
 
 section {
     margin-bottom: 20px;

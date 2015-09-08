@@ -92,13 +92,15 @@
 
 
 (def i18n {:i18n {"fr" {:errors                {:mandatory "Cette donnée est obligatoire"
-                                                :bad-email "Invalid email"}
+                                                :bad-email "Invalid email"
+                                                :bad-password "Your passwords are not identical"}
                         :demo-help-title       {:title "Regarde m'man: un titre !"}
                         :demo-help-info        {:email {:info "Your email will only be used to send your travel details"}}
                         :demo-help-desc        {:email {:desc "We won't spam you, ever"}}
                         :demo-help-placeholder {:email {:ph   "you.email@org"}}}
                   "en" {:errors         {:mandatory "This information is mandatory"
-                                         :bad-email "Invalid email"}
+                                         :bad-email "Invalid email"
+                                         :bad-password "Your passwords are not identical"}
                         :demo-help-title       {:title "Look ma, a title !"}
                         :demo-help-info        {:email {:info "Your email will only be used to send your travel details"}}
                         :demo-help-desc        {:email {:desc "We won't spam you, ever"}}
@@ -123,31 +125,36 @@
                         :guests      {:type  "stepper"
                                       :attrs {:min 1 :max 6}}}})
 
+
+
 (def app-state (atom {:header (html [:h2 "Welcome to the  interactive tutorial of " [:a {:href "https://github.com/hiram-madelaine/om-inputs"} "om-inputs"] " !"]
-                                    [:h5 "In this tutorial, you will discover all the functionalities of om-inputs an " [:a {:href "https://github.com/omcljs/om"} "Om"] " library to generate forms from " [:a {:href "https://github.com/Prismatic/schema"} "Prismatic/schema."]]
-                                    [:section "Each feature is presented in a card, each card contains a form specification that you can edit and compile on the fly.
-                                 The resulting form is rendered in the Display section"]
+                                    [:h5 "In this tutorial, you will discover all the functionalities of om-inputs, an " [:a {:href "https://github.com/omcljs/om"} "Om"] " library to generate forms with " [:a {:href "https://github.com/Prismatic/schema"} "Prismatic/schema."]]
                                     [:div {:id "help"}
                                      [:div {:class "header-help"}
-                                      [:h5 "To create a form you need:"]
+                                      [:h5 "To build a form, om-inputs provides one function : "]
+                                      [:code "make-input-comp"]
+                                      [:h5 "It takes a form specification and produces an Om component: "]
+                                      [:code "(def om-component (make-input-comp spec))"]]
+                                     [:div {:class "header-help"}
+                                      [:h5 "The form specification is a map that contains:"]
                                       [:ul
                                        [:li "The name of the component as a Keyword"]
                                        [:li "A prismatic Schema describing the data"]
                                        [:li "An action function taking 3 parameters: "
-                                        [:div "the app cursor, the owner and the map result"]]]]
+                                        [:div "the app cursor, the owner and the map result"]]
+                                       [:li "Options to customize the component"]]]
                                      [:div {:class "header-help"}
-                                      [:h5 "om-inputs provides one function :"]
-                                      [:code "make-input-comp"]
-                                      [:div "in the demo sources  Prismatic/schema is required with the prefix s"]]
-                                     [:div {:class "header-help"}
-                                      [:div "To use an example :"
-                                       [:ul " click on \"Compile\"; "]
-                                       [:ul "The form will appear in the display section."]
-                                       [:ul " The result section shows the app cursor value"]]
-                                      [:div "Feel free to modify the form's specification and recompile."]]]
+                                      [:h5 "Each feature is presented in a demo card"]
+                                      [:div "Each card contains a form specification that you can edit and compile on the fly. "]
+                                      [:ul
+                                       [:li "Click on \"Compile\""]
+                                       [:li "The form is rendered in the display section."]
+                                       [:li "The result section shows the app cursor value"]
+                                       [:li "Feel free to modify the form's specification and recompile."]]]]
                                     )
                       :demos  [{:title   "Basic types: The usual suspects"
-                                :desc    (html [:div "You describe your form using the leaf schemas: " [:code " s/Str, s/Num, s/Int, s/Bool, s/Inst"]])
+                                :desc    (html [:div "You describe your form using the leaf schemas: " [:code " s/Str, s/Num, s/Int, s/Bool, s/Inst"]
+                                                [:div "in the demo sources  Prismatic/schema is required with the prefix: s"]])
                                 :id      "usual-suspects"
                                 :content [{:k     :demo-1
                                            :title "String"
@@ -203,17 +210,20 @@
                                            :title "Optional value"
                                            :style "inst"}]}
                                {:title   "UX variation around Integer"
+                                :desc    (html [:h5 "It is possible to change the default rendering of a field by specifying a type."]
+                                               [:div "Just add the type in the options. The rendering can be further refined by specifying attributes."])
                                 :id      "integer-variations"
                                 :content [{:src   "{:name   :demo-num-segmented\n :schema {:guests s/Int}\n :action (fn [app owner result]\n    (om/update! app :demo-num-segmented result))\n :opts\n {:guests\n  {:type \"range-btn-group\"\n   :attrs {:min 1 :max 8 :step 1}}}}\n"
                                            :k     :demo-num-segmented
                                            :title "Segmented control to choose an Integer in a range"
-                                           :desc  "A numeric field can be displayed as a stepper"
+                                           :desc  (html [:div "Display a numeric field as segmented control using the type: "
+                                                         [:code "\"range-btn-group\""]
+                                                         [:div "The min, max and step can be set."]])
                                            :style "enum"}
-                                          {
+                                          {:title "Stepper for easy Integer adjustement"
+                                           :desc  (html [:div "DIsplay a numeric field as a stepper using the type: " [:code "\"stepper\" "]])
                                            :src   "{:name   :demo-num-stepper\n :schema {:guests s/Int}\n :action (fn [app owner result]\n (om/update! app :demo-num-stepper result))\n :opts {:guests\n  {:type \"stepper\" \n   :attrs {:min 2 :max 8 :step 2}}\n :init   {:guests 2}}}\n"
                                            :k     :demo-num-stepper
-                                           :title "Stepper for easy Integer adjustement"
-                                           :desc  "A numeric field can be displayed as a stepper"
                                            :style "numeric"}
                                           ]}
                                {:title   "UX variations around lists"
@@ -255,13 +265,25 @@
                                            :desc  "During typing, the string must conform to the regex.
                                                                 Because you are using regex you now have an other problem..."
                                            :style "enum"}]}
-                               {:title   "Extra Validations"
+                               {:title   "More complete validation rules"
+                                :desc    (html [:div [:h5 "It is possible to add more complex validation rules than thos we can express with  Prismatic/schema."]
+                                                [:div "I chose the library " [:a {:href "https://github.com/jkk/verily"} "Verily"] " for the following reasons: "]
+                                                [:ul
+                                                 [:li "the rules can be described as data structure"]
+                                                 [:li "the rules are expressed on the whole map not by key"]
+                                                 [:li "You can easily add new rules"]
+                                                 [:li "It works for Clojure and ClojureScript"]]])
                                 :id      "extra-validations"
-                                :content [{:src   "{:name   :demo-validation-email\n :schema {:email s/Str}\n :action (fn [a o v]\n                 (om/update! a :demo-validation-email v))\n :opts {:validations\n        [[:email [:email] :bad-email]]}}"
-                                           :title "Let's see how to declare valiation rule"
-                                           :desc  (html [:p "The library " [:a "Verily"] " is used"])
+                                :content [{:title "Specify an email field."
+                                           :src   "{:name   :demo-validation-email\n :schema {:email s/Str}\n :action (fn [a o v]\n                 (om/update! a :demo-validation-email v))\n :opts {:validations\n        [[:email [:email] :bad-email]]}}"
+                                           :desc  (html [:div "The :email field must conform to a valid email."])
                                            :k     :demo-validation-email
-                                           :style "blue"}]}
+                                           :style "blue"}
+                                          {:title "Inter fields validation"
+                                           :desc "Two fields must be identical"
+                                           :k :demo-validation-passwords
+                                           :src "{:name   :demo-validation-password\n :schema {:password s/Str\n\t\t  :confirm s/Str}\n :action (fn [a o v] (om/update! a :demo-validation-password v))\n :opts {:order [:password :confirm]\n\t\t:password {:attrs {:type \"password\"}}\n\t\t:confirm {:attrs {:type \"password\"}}\n\t\t:validations\n        [[:equal [:confirm :password] :bad-password]]}}"
+                                           :style "yellow"}]}
                                {:title   "i18n - Help your users with information"
                                 :id      "help-users"
                                 :content [{:comp     demo-help-info
@@ -334,10 +356,11 @@
                                            :style "string"}]}
                                {:title   "Asynchronous actions"
                                 :id      "asynchronous-actions"
-                                :desc    (html [:div [:div "When your form submission is asynchronous :"
-                                                      [:li "Add the option: " [:code "{:opts {:action {:async true}}}"]]
-                                                      [:li "The action function gets an extra parameter : a Channel"]
-                                                      [:li (html [:div "The action completes when the channel receives the result : either " [:code "[:ok]"] " or " [:code "[:ko \"Error message\"]"]])]]])
+                                :desc    (html [:div "When your form submission is asynchronous :"
+                                                [:ul
+                                                 [:li "Add the option: " [:code "{:opts {:action {:async true}}}"]]
+                                                 [:li "The action function gets an extra parameter : a Channel"]
+                                                 [:li (html [:div "The action completes when the channel receives the result : either " [:code "[:ok]"] " or " [:code "[:ko \"Error message\"]"]])]]])
                                 :content [{:type  :comp
                                            :comp  async-action
                                            :src   (with-out-str (repl/source async-action))
@@ -359,7 +382,7 @@
                                            :desc  "An hypothetic booking form"
                                            :k     :booking
                                            :type  :playground
-                                           :style "string"
+                                           :style "blue"
                                            :src   "{:name :booking,\n :schema\n {:email s/Str,\n  :name s/Str,\n  :departure s/Inst,\n  :arrival s/Inst,\n  :guests s/Int,\n  :bedrooms s/Int,\n  :room-type (s/enum \"house\" \"apartment\" \"room\")},\n :action (fn [a o v] \n\t\t   (om/update! a :booking v)),\n :opts\n {:init {:guests 1, :departure (js/Date.)},\n  :validations [[:email [:email] :bad-email]],\n  :room-type {:type \"btn-group\"},\n  :bedrooms {:type \"range-btn-group\", \n\t\t\t :attrs {:min 1, :max 6}},\n  :guests {:type \"stepper\", \n\t\t   :attrs {:min 1, :max 6}}}}" #_(with-out-str (pprint booking))}]}]}))
 
 ;________________________________________________
@@ -407,21 +430,6 @@
   ([cache ns cb]
    (with-cache-ns! cache ns cb :edn)))
 
-
-#_(defn mount [id v]
-  "Attach root from a schema"
-  (om/root
-    (fn [app owner]
-      (reify
-        om/IInitState
-        (init-state [_]
-          {:lang "en"})
-        om/IRenderState
-        (render-state [_ state]
-          (om/build (make-input-comp v) app {:state state}))))
-    {}
-    {:target (. js/document (getElementById id))
-     :shared i18n}))
 
 (defn eval
   [st app forms]
