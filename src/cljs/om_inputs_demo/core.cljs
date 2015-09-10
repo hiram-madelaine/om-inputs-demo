@@ -171,7 +171,12 @@
                         :demo-help-info        {:email {:info "Your email will only be used to send your travel details"}}
                         :demo-help-desc        {:email {:desc "We won't spam you, ever"}}
                         :demo-help-placeholder {:email {:ph "you.email@org"}}
-                        :booking               {:title "Your information"}}}})
+                        :booking               {:title     "Your reservation"
+                                                :email     {:desc "We won't spam you."}
+                                                :room-type {:label "Room type"
+                                                            :data {"house"      {:label "Entire Place"}
+                                                                   "apartment" {:label "Private room"}
+                                                                   "room"     {:label "Shared room"}}}}}}})
 (def booking '{:name   :booking
                :schema {:email     s/Str
                         :name      s/Str
@@ -346,13 +351,13 @@
                                            :k     :demo-validation-email
                                            :style "blue"}
                                           {:title "Inter fields validation"
-                                           :desc  "Two fields must be identical"
+                                           :desc  "The classical example of the password and password confrmation."
                                            :k     :demo-validation-passwords
                                            :src   "{:name   :demo-validation-password\n :schema {:password s/Str\n\t\t  :confirm s/Str}\n :action (fn [a o v] (om/update! a :demo-validation-password v))\n :opts {:order [:password :confirm]\n\t\t:password {:attrs {:type \"password\"}}\n\t\t:confirm {:attrs {:type \"password\"}}\n\t\t:validations\n        [[:equal [:confirm :password] :bad-password]]}}"
                                            :style "yellow"}]}
                                {:title   "i18n - Help your users with information"
                                 :desc    (html [:h5 "It is possible to provide the labels and error messages in multiple languages. Just put a map in the shared data."]
-                                               [:textarea {:id "i18n-demo"} (with-out-str (pprint i18n))])
+                                               [:textarea {:id "i18n-demo"} (str (subs (with-out-str (pprint i18n)) 0 500) "...")])
                                 :cm      "i18n-demo"
                                 :id      "help-users"
                                 :content [{:comp     demo-help-title
@@ -368,7 +373,7 @@
                                            :title    "Change the label of your fields"
                                            :desc     "You can provide the label for you fields in several languages"
                                            :src-i18n true
-                                           :style    "green"}
+                                           :style    "blue"}
                                           {:comp     demo-help-desc
                                            :type     :i18n
                                            :title    "Add a field description"
@@ -382,14 +387,26 @@
                                            :desc     "When you enter the field, a tooltip with an help message appears. The tooltip disappears when you leave the field"
                                            :src-i18n true
                                            :k        :demo-help-info
-                                           :style    "string"}
+                                           :style    "green"}
                                           {:comp     demo-help-placeholder
                                            :type     :i18n
                                            :title    "Add a placeholder"
                                            :desc     "Placeholders are often discouraged"
                                            :src-i18n true
                                            :k        :demo-help-placeholder
-                                           :style    "action"}]}
+                                           :style    "string"}]}
+                               {:title   "Change the order of fields"
+                                :id      "change-order"
+                                :content [{:title "When the order is not what you want"
+                                           :desc  "The schema is not ordered so the fields won't be in the order you expect."
+                                           :k     :demo-unordered
+                                           :src   "{:name   :demo-unordered \n :schema {:first s/Int\n\t\t  :second s/Int\n\t\t  :third s/Int}\n :action (fn [a o v] (om/update! a :demo-unordered v))}"
+                                           :style "red"}
+                                          {:title "Change the order of fields"
+                                           :desc  (html [:div "You can order the fields by specifying it in the options"] [:code "{:opts {:order [:first :second :third]}"])
+                                           :k     :demo-order
+                                           :src   "{:name   :demo-order\n :schema {:first s/Int\n\t\t  :second s/Int\n\t\t  :third s/Int}\n :action (fn [a o v] (om/update! a :demo-order v))\n :opts {:order [:first :second :third]}}"
+                                           :style "green"}]}
 
                                {:title   "Form submission options"
                                 :id      "action-options"
@@ -408,7 +425,7 @@
                                                          but as a clean action is provided then the form can be cleaned and resubmitted again."]])
                                            :src   "{:name :action-resetable\n :schema {:resetable s/Str}\n :action (fn [a o v]\n       (om/update! a :action-resetable v))\n :clean (fn [a o]\n       (js/alert \"cleaning action !\"))\n :opts {:action {:one-shot true}}}"
                                            :k     :action-resetable
-                                           :style "green"}
+                                           :style "string"}
                                           {:title "Only once"
                                            :desc  (html [:div "If you really want your form to be submitted only once, use the option :" [:code " {:action {:one-shot true}} "]
                                                          [:div " combined with hidding The \"Clean\" button"]])
@@ -454,11 +471,11 @@
                                {:title   "Playground"
                                 :id      "complete-forms"
                                 :content [{:title "Booking reservation"
-                                           :desc  "An hypothetic booking form"
+                                           :desc  "This is a more involved example combining several fetaures."
                                            :k     :booking
                                            :type  :playground
                                            :style "blue"
-                                           :src   "{:name :booking,\n :schema\n {:email s/Str,\n  :name s/Str,\n  :departure s/Inst,\n  :arrival s/Inst,\n  :guests s/Int,\n  :bedrooms s/Int,\n  :room-type (s/enum \"house\" \"apartment\" \"room\")},\n :action (fn [a o v] \n\t\t   (om/update! a :booking v)),\n :opts\n {:init {:guests 1, :departure (js/Date.)},\n  :validations [[:email [:email] :bad-email]],\n  :room-type {:type \"btn-group\"},\n  :bedrooms {:type \"range-btn-group\", \n\t\t\t :attrs {:min 1, :max 6}},\n  :guests {:type \"stepper\", \n\t\t   :attrs {:min 1, :max 6}}}}" #_(with-out-str (pprint booking))}]}]}))
+                                           :src   "{:name :booking,\n :schema\n {:email s/Str,\n  :arrival s/Inst,\n  (s/optional-key :departure) s/Inst,\n  :guests s/Int,\n  (s/optional-key :bedrooms )s/Int,\n  (s/optional-key :room-type) \n  (s/enum \"house\" \"apartment\" \"room\")},\n :action (fn [a o v] (om/update! a :booking v)),\n :opts\n {:init {:guests 1, :arrival (js/Date.)},\n  :order [:arrival \n\t\t  :departure \n\t\t  :guests \n\t\t  :room-type \n\t\t  :bedrooms \n\t\t  :email]\n  :validations [[:email [:email] :bad-email]],\n  :room-type {:type \"btn-group\"},\n  :bedrooms {:type \"range-btn-group\", \n\t\t\t :attrs {:min 1, :max 6}},\n  :guests {:type \"stepper\", \n\t\t   :attrs {:min 1, :max 6}}}}" #_(with-out-str (pprint booking))}]}]}))
 
 
 ;________________________________________________
@@ -617,7 +634,6 @@
                                                                                       spec (eval cache demo  (.getValue ed))]
                                                                                  (om/set-state! owner :spec (make-input-comp spec)))} "Compile")
                                                    (when (:error demo) (om/build error-view (:error demo))))
-
                                           (when spec
                                             (dom/div #js {:className "play-render"}
                                                      (om/build spec demo {:state state})
