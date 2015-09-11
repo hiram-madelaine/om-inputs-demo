@@ -10,7 +10,7 @@ module.exports = function(grunt) {
             },
          autoprefixer: {
              options: {
-
+                    browsers: ['last 3 versions']
              },
               single_file: {
                    options: {
@@ -26,6 +26,7 @@ module.exports = function(grunt) {
                         'resources/public/css/forms.css',
                         'resources/public/css/datepicker.css',
                         'resources/public/css/popupdatepicker.css',
+                        'resources/public/css/codemirror/codemirror.css',
                         'resources/public/css/style.css'],
                 dest: 'resources/public/css/release.css'
             }},
